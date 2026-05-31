@@ -370,6 +370,30 @@ MVP 支持：
 
 ## 6. 研发阶段
 
+### 阶段 0：架构约束
+
+时间：第 0 周
+
+目标：
+
+- 在功能增长前固定目录、命名、依赖方向、控制流和代码风格。
+- 让 Phase 1-2 的每次提交都能自检是否偏离架构。
+
+任务：
+
+- 建立 `docs/phase0-architecture.md`。
+- 固定主流程：Import -> Plan -> Rename -> Transform -> Encode -> Export。
+- 固定目录边界：pages/layouts/components/lib/workers/codecs/docs。
+- 固定依赖方向：UI 只能通过 Worker message 调用重计算，不能直接耦合 codec 内部。
+- 固定命名词汇：`ImageJob`、`ImageSettings`、`ProcessedImage`、`WorkerRequest`、`WorkerResponse`。
+- 固定验证门槛：`npm run typecheck`、`npm run build`、`cargo check --manifest-path packages/pngquant-wasm/Cargo.toml`。
+
+验收：
+
+- Phase 0 文档存在并写入强约束。
+- Phase 1-2 代码按该文档自检。
+- 后续新增代码不得绕过该依赖方向和控制流。
+
 ### 阶段 A：技术原型
 
 时间：第 1-2 周
