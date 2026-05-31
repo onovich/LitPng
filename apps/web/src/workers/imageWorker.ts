@@ -13,6 +13,30 @@ function outputType(inputType: string, settings: ImageSettings): string {
   return "image/png";
 }
 
+async function encodeCanvas(canvas: OffscreenCanvas, type: string, quality: number): Promise<Blob> {
+  const context = canvas.getContext("2d", { alpha: true });
+
+  if (!context) {
+    throw new Error("Canvas context is unavailable for encoding.");
+  }
+
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+  if (type === "image/jpeg") {
+    const { encode } = await import("@jsquash/jpeg");
+    const bytes = await encode(imageData, { quality: Math.round(quality * 100) });
+    return new Blob([bytes], { type });
+  }
+
+  if (type === "image/png") {
+    const { encode } = await import("@jsquash/png");
+    const bytes = await encode(imageData);
+    return new Blob([bytes], { type });
+  }
+
+  return canvas.convertToBlob({ type, quality });
+}
+
 async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
   const startedAt = performance.now();
 
@@ -34,10 +58,7 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
     bitmap.close();
 
     const type = outputType(request.file.type, request.settings);
-    const blob = await canvas.convertToBlob({
-      type,
-      quality: type === "image/png" ? undefined : request.settings.quality
-    });
+    const blob = await encodeCanvas(canvas, type, request.settings.quality);
 
     return {
       type: "done",

@@ -80,6 +80,7 @@ Current implementation status:
 
 - `packages/pngquant-wasm` exposes a narrow `quantize_rgba` adapter around `imagequant`.
 - The adapter accepts RGBA pixels and returns palette RGBA bytes plus indexed pixels.
+- The web worker now uses WASM encoders for the Phase 1 browser path: `@jsquash/jpeg` for MozJPEG output and `@jsquash/png` for PNG output.
 - Native `cargo check` and `cargo test` validate the adapter API.
 - `npm run codec:build-wasm` verifies the package can compile for `wasm32-unknown-unknown` after the target std files are present in the active Rust toolchain.
 

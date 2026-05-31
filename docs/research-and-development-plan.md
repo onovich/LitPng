@@ -722,7 +722,7 @@ imagequant = { version = "4.0", default-features = false }
 当前研发落点：
 
 - `packages/pngquant-wasm` 锁定并下载 `imagequant = "4.0"`。
-- Phase 1 先用浏览器 Canvas/OffscreenCanvas 建立可运行的批量处理链路。
-- Phase 2 把 PNG 临时编码路径替换为 `imagequant` WASM quantization + PNG encoder。
+- Phase 1 用浏览器 Canvas/OffscreenCanvas 建立可运行的批量处理链路，并通过 `@jsquash/jpeg` / `@jsquash/png` 提供 WASM 编码路径。
+- Phase 2 已建立 `imagequant` WASM adapter：RGBA -> palette RGBA + indexed pixels。下一步是在该 adapter 输出后接 indexed PNG encoder，替换当前通用 PNG WASM encoder。
 
 详细决策见 `docs/pngquant-library-decision.md`。

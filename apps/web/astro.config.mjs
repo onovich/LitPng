@@ -4,5 +4,10 @@ import react from "@astrojs/react";
 export default defineConfig({
   integrations: [react()],
   output: "static",
-  site: "https://littlepng.com"
+  site: "https://littlepng.com",
+  vite: {
+    worker: {
+      format: "es"
+    }
+  }
 });
