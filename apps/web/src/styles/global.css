@@ -1,0 +1,375 @@
+:root {
+  color-scheme: light;
+  --ink: #17211b;
+  --muted: #66736b;
+  --panel: #ffffff;
+  --panel-strong: #f5f7f1;
+  --line: #d9dfd7;
+  --accent: #1e6f5c;
+  --accent-strong: #155947;
+  --gold: #bb7a21;
+  --danger: #b33939;
+  --sky: #dcecf4;
+  --shadow: 0 18px 46px rgba(28, 38, 32, 0.12);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    linear-gradient(180deg, rgba(220, 236, 244, 0.72), rgba(245, 247, 241, 0.94) 38%),
+    #f5f7f1;
+  color: var(--ink);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+button svg {
+  height: 18px;
+  width: 18px;
+}
+
+input,
+select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  min-height: 38px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+input[type="range"] {
+  padding: 0;
+}
+
+.appShell {
+  margin: 0 auto;
+  max-width: 1240px;
+  min-height: 100vh;
+  padding: 22px;
+}
+
+.topbar {
+  align-items: flex-end;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: clamp(34px, 6vw, 68px);
+  letter-spacing: 0;
+  line-height: 0.95;
+  margin: 0;
+}
+
+.metrics {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.metrics span,
+.dropStats span,
+.status {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+.workspace {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.dropzone {
+  align-items: center;
+  background:
+    linear-gradient(45deg, rgba(30, 111, 92, 0.08) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(30, 111, 92, 0.08) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(30, 111, 92, 0.08) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(30, 111, 92, 0.08) 75%),
+    var(--panel);
+  background-position:
+    0 0,
+    0 12px,
+    12px -12px,
+    -12px 0;
+  background-size: 24px 24px;
+  border: 1px dashed rgba(30, 111, 92, 0.42);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: center;
+  min-height: 360px;
+  padding: 32px;
+}
+
+.dropzone input {
+  display: none;
+}
+
+.dropButton {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  min-height: 54px;
+  padding: 0 18px;
+}
+
+.dropStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.controls {
+  display: grid;
+  gap: 12px;
+}
+
+.controlGroup {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.controlTitle {
+  align-items: center;
+  color: var(--accent-strong);
+  display: flex;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.controlTitle svg {
+  height: 18px;
+  width: 18px;
+}
+
+label {
+  color: var(--muted);
+  display: grid;
+  font-size: 13px;
+  gap: 5px;
+}
+
+.segmented {
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 4px;
+}
+
+.segmented button {
+  border: 0;
+  border-radius: 6px;
+  min-height: 34px;
+  padding: 0;
+}
+
+.segmented .selected {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.primaryAction {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+
+.savings {
+  align-items: baseline;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.savings strong {
+  color: var(--gold);
+}
+
+.fileTable {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tableHeader,
+.fileRow {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(170px, 1.2fr) minmax(170px, 1.2fr) minmax(140px, 0.8fr) minmax(110px, 0.7fr) 44px;
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.tableHeader {
+  background: var(--panel-strong);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.fileRow {
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.fileRow > button {
+  min-height: 34px;
+  padding: 0;
+  width: 36px;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  justify-self: start;
+  text-transform: capitalize;
+}
+
+.status.done {
+  border-color: rgba(30, 111, 92, 0.3);
+  color: var(--accent-strong);
+}
+
+.status.failed {
+  border-color: rgba(179, 57, 57, 0.3);
+  color: var(--danger);
+}
+
+.emptyRows {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  justify-content: center;
+  min-height: 140px;
+}
+
+@media (max-width: 920px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .metrics {
+    justify-content: flex-start;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .dropzone {
+    min-height: 260px;
+  }
+
+  .savings {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .appShell {
+    padding: 14px;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .fileRow {
+    align-items: start;
+    grid-template-columns: 1fr 44px;
+    padding: 12px;
+  }
+
+  .fileRow > span {
+    grid-column: 1;
+  }
+
+  .fileRow > button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

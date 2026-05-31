@@ -1,0 +1,21 @@
+{
+  "name": "littlepng",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm --workspace @littlepng/web run dev",
+    "build": "npm --workspace @littlepng/web run build",
+    "preview": "npm --workspace @littlepng/web run preview",
+    "typecheck": "npm --workspace @littlepng/web run typecheck",
+    "codec:fetch": "cargo fetch --manifest-path packages/pngquant-wasm/Cargo.toml",
+    "codec:check": "cargo check --manifest-path packages/pngquant-wasm/Cargo.toml"
+  },
+  "overrides": {
+    "css-tree": "3.1.0",
+    "prismjs": "1.29.0"
+  }
+}

@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import ImagePrepApp from "../components/ImagePrepApp";
+import { toolPages } from "../data/toolPages";
+
+const page = toolPages[0];
+---
+
+<ToolLayout page={page}>
+  <ImagePrepApp client:load pageHeading={page.heading} preset={page.preset} />
+</ToolLayout>

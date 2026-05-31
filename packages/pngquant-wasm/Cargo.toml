@@ -1,0 +1,13 @@
+[package]
+name = "littlepng-pngquant-wasm"
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+imagequant = { version = "4.0", default-features = false }
+wasm-bindgen = "0.2"

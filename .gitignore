@@ -1,0 +1,8 @@
+node_modules/
+target/
+
+apps/web/dist/
+.astro/
+
+*.log
+npm-debug.log*

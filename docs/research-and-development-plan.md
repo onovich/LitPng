@@ -678,3 +678,27 @@ Desktop Pro 任务：
 8. 搭第一批 SEO 页面。
 9. 上线免费 MVP。
 10. 根据真实使用数据决定 Pro、桌面版或 CLI 的优先级。
+
+## 13. pngquant / libimagequant 选择
+
+根据 pngquant 官方页面和 LittlePNG 的浏览器优先规划，底层 PNG 有损量化不下载 pngquant CLI 二进制，而选择 `libimagequant` 的 Rust 库路线：
+
+```toml
+imagequant = { version = "4.0", default-features = false }
+```
+
+理由：
+
+- pngquant CLI 更适合命令行和服务端，不适合作为浏览器批量任务队列的核心接口。
+- 官方 `libimagequant` 是底层 RGBA -> 8-bit palette quantization 库，正好对应 LittlePNG 的 codec boundary。
+- `libimagequant` 不负责 PNG decode/encode，因此 LittlePNG 仍需独立实现 decode、encode、worker queue 和 ZIP export。
+- WASM 构建应关闭默认 feature，避免默认线程特性带来的浏览器兼容和构建复杂度。
+- 授权上要特别注意 GPLv3+ / commercial license。闭源商业化前必须确认商业授权或替换依赖。
+
+当前研发落点：
+
+- `packages/pngquant-wasm` 锁定并下载 `imagequant = "4.0"`。
+- Phase 1 先用浏览器 Canvas/OffscreenCanvas 建立可运行的批量处理链路。
+- Phase 2 把 PNG 临时编码路径替换为 `imagequant` WASM quantization + PNG encoder。
+
+详细决策见 `docs/pngquant-library-decision.md`。

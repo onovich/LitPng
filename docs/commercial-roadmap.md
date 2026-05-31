@@ -260,6 +260,7 @@ SEO 扩展：
 - 基础 crop。
 - 本地隐私说明。
 - SEO 工具页。
+- 锁定 PNG 有损量化依赖：`imagequant = "4.0"`，并把 PNG quantization 放在独立 codec boundary 后。
 
 ### P1：提升差异化和留存
 

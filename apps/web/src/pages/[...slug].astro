@@ -1,0 +1,17 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import ImagePrepApp from "../components/ImagePrepApp";
+import { findToolPage, toolPages } from "../data/toolPages";
+
+export function getStaticPaths() {
+  return toolPages
+    .filter((page) => page.path !== "/")
+    .map((page) => ({ params: { slug: page.path.slice(1) } }));
+}
+
+const page = findToolPage(`/${Astro.params.slug}`);
+---
+
+<ToolLayout page={page}>
+  <ImagePrepApp client:load pageHeading={page.heading} preset={page.preset} />
+</ToolLayout>

@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "packages/pngquant-wasm"
+]
+resolver = "2"
