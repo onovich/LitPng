@@ -1,0 +1,17 @@
+﻿{
+    "schemaVersion":  1,
+    "initializedMarker":  "codex-project-git-workflow: initialized",
+    "initializedAt":  "2026-05-31 12:59:05 +08:00",
+    "projectName":  "LitPng",
+    "repoRoot":  "D:/LabProjects/LitPng",
+    "safeDirectory":  "D:/LabProjects/LitPng",
+    "statusCommand":  "git -c safe.directory=D:/LabProjects/LitPng status --short --branch",
+    "validationCommands":  [
+
+                           ],
+    "stagingPolicy":  "ask each time",
+    "commitCommand":  "",
+    "pushCommand":  "git -c safe.directory=D:/LabProjects/LitPng push -u origin HEAD",
+    "docsRequirement":  "",
+    "forbiddenCommands":  ""
+}

@@ -1,0 +1,143 @@
+[
+  {
+    "keyword": "image compressor",
+    "volume": 60500,
+    "cpc": 1.84,
+    "competition": 0.05,
+    "country": "us",
+    "market_value": 3025,
+    "commercial_value": 116886,
+    "cached": true,
+    "cached_at": "2026-05-01T22:41:55.305Z"
+  },
+  {
+    "keyword": "image compression",
+    "volume": 60500,
+    "cpc": 1.62,
+    "competition": 0.06,
+    "country": "us",
+    "market_value": 3630,
+    "commercial_value": 103890.6,
+    "cached": true,
+    "cached_at": "2026-05-03T11:50:38.737Z"
+  },
+  {
+    "keyword": "tinypng",
+    "volume": 22200,
+    "cpc": 3.33,
+    "competition": 0.04,
+    "country": "us",
+    "market_value": 888,
+    "commercial_value": 76883.04,
+    "cached": true,
+    "cached_at": "2026-05-31T04:41:34.957Z"
+  },
+  {
+    "keyword": "compress jpg",
+    "volume": 18100,
+    "cpc": 3.56,
+    "competition": 0.01,
+    "country": "us",
+    "market_value": 181,
+    "commercial_value": 65080.36,
+    "cached": true,
+    "cached_at": "2026-05-12T18:10:32.517Z"
+  },
+  {
+    "keyword": "compress png",
+    "volume": 22200,
+    "cpc": 2.73,
+    "competition": 0.02,
+    "country": "us",
+    "market_value": 444,
+    "commercial_value": 61818.12,
+    "cached": true,
+    "cached_at": "2026-05-03T17:14:29.507Z"
+  },
+  {
+    "keyword": "png compressor",
+    "volume": 22200,
+    "cpc": 0.88,
+    "competition": 0,
+    "country": "us",
+    "market_value": 0,
+    "commercial_value": 19536,
+    "cached": true,
+    "cached_at": "2026-05-28T05:49:12.006Z"
+  },
+  {
+    "keyword": "jpeg compressor",
+    "volume": 6600,
+    "cpc": 2.99,
+    "competition": 0.01,
+    "country": "us",
+    "market_value": 66,
+    "commercial_value": 19931.34,
+    "cached": true,
+    "cached_at": "2026-05-28T05:49:11.115Z"
+  },
+  {
+    "keyword": "compress images online",
+    "volume": 3600,
+    "cpc": 1.71,
+    "competition": 0.03,
+    "country": "us",
+    "market_value": 108,
+    "commercial_value": 6340.68,
+    "cached": true,
+    "cached_at": "2026-05-22T04:24:07.632Z"
+  },
+  {
+    "keyword": "online image compressor",
+    "volume": 2400,
+    "cpc": 1.97,
+    "competition": 0.01,
+    "country": "us",
+    "market_value": 24,
+    "commercial_value": 4775.28,
+    "cached": true,
+    "cached_at": "2026-05-15T11:05:14.938Z"
+  },
+  {
+    "keyword": "bulk image compressor",
+    "volume": 480,
+    "cpc": 4.28,
+    "competition": 0.04,
+    "country": "us",
+    "market_value": 19.2,
+    "commercial_value": 2136.58,
+    "cached": true,
+    "cached_at": "2026-05-23T17:48:31.220Z"
+  },
+  {
+    "keyword": "batch image compressor",
+    "volume": 70,
+    "cpc": 0,
+    "competition": 0.03,
+    "country": "us",
+    "market_value": 2.1,
+    "commercial_value": 7.21,
+    "cached": true,
+    "cached_at": "2026-05-31T04:41:44.895Z"
+  },
+  {
+    "keyword": "jpg compressor",
+    "volume": 0,
+    "cpc": 0,
+    "competition": 0,
+    "country": "us",
+    "market_value": 0,
+    "commercial_value": 0,
+    "cached": false
+  },
+  {
+    "keyword": "batch png compressor",
+    "volume": 0,
+    "cpc": 0,
+    "competition": 0,
+    "country": "us",
+    "market_value": 0,
+    "commercial_value": 0,
+    "cached": false
+  }
+]
