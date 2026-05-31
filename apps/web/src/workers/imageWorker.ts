@@ -1,4 +1,5 @@
 import type { ImageSettings, WorkerRequest, WorkerResponse } from "../lib/types";
+import { createResizeCropPlan } from "../lib/geometry";
 
 function outputType(inputType: string, settings: ImageSettings): string {
   if (settings.outputFormat !== "original") {
@@ -12,68 +13,13 @@ function outputType(inputType: string, settings: ImageSettings): string {
   return "image/png";
 }
 
-function fitSize(width: number, height: number, settings: ImageSettings): { width: number; height: number } {
-  const maxWidth = settings.maxWidth || width;
-  const maxHeight = settings.maxHeight || height;
-  const scale = Math.min(maxWidth / width, maxHeight / height, 1);
-
-  return {
-    width: Math.max(1, Math.round(width * scale)),
-    height: Math.max(1, Math.round(height * scale))
-  };
-}
-
-function cropBox(
-  sourceWidth: number,
-  sourceHeight: number,
-  targetWidth: number,
-  targetHeight: number,
-  settings: ImageSettings
-): { sx: number; sy: number; sw: number; sh: number; dx: number; dy: number; dw: number; dh: number } {
-  if (settings.cropMode === "fit") {
-    return { sx: 0, sy: 0, sw: sourceWidth, sh: sourceHeight, dx: 0, dy: 0, dw: targetWidth, dh: targetHeight };
-  }
-
-  const sourceRatio = sourceWidth / sourceHeight;
-  const targetRatio = targetWidth / targetHeight;
-  let sw = sourceWidth;
-  let sh = sourceHeight;
-
-  if (sourceRatio > targetRatio) {
-    sw = sourceHeight * targetRatio;
-  } else {
-    sh = sourceWidth / targetRatio;
-  }
-
-  let sx = (sourceWidth - sw) / 2;
-  let sy = (sourceHeight - sh) / 2;
-
-  if (settings.cropAnchor === "left") {
-    sx = 0;
-  }
-
-  if (settings.cropAnchor === "right") {
-    sx = sourceWidth - sw;
-  }
-
-  if (settings.cropAnchor === "top") {
-    sy = 0;
-  }
-
-  if (settings.cropAnchor === "bottom") {
-    sy = sourceHeight - sh;
-  }
-
-  return { sx, sy, sw, sh, dx: 0, dy: 0, dw: targetWidth, dh: targetHeight };
-}
-
 async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
   const startedAt = performance.now();
 
   try {
     const bitmap = await createImageBitmap(request.file);
-    const size = fitSize(bitmap.width, bitmap.height, request.settings);
-    const canvas = new OffscreenCanvas(size.width, size.height);
+    const plan = createResizeCropPlan({ width: bitmap.width, height: bitmap.height }, request.settings);
+    const canvas = new OffscreenCanvas(plan.output.width, plan.output.height);
     const context = canvas.getContext("2d", { alpha: true });
 
     if (!context) {
@@ -81,9 +27,9 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
     }
 
     context.fillStyle = request.settings.background;
-    context.fillRect(0, 0, size.width, size.height);
+    context.fillRect(0, 0, plan.output.width, plan.output.height);
 
-    const box = cropBox(bitmap.width, bitmap.height, size.width, size.height, request.settings);
+    const box = plan.crop;
     context.drawImage(bitmap, box.sx, box.sy, box.sw, box.sh, box.dx, box.dy, box.dw, box.dh);
     bitmap.close();
 
@@ -100,8 +46,8 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
         name: request.outputName,
         blob,
         type,
-        width: size.width,
-        height: size.height,
+        width: plan.output.width,
+        height: plan.output.height,
         size: blob.size,
         durationMs: Math.round(performance.now() - startedAt)
       }

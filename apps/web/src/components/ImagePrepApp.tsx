@@ -9,9 +9,10 @@ import {
   Trash2,
   Type
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ToolPage } from "../data/toolPages";
 import { formatBytes, outputNameFor, uniqueNames } from "../lib/filenames";
+import { runWithConcurrency } from "../lib/queue";
 import { downloadBlob, zipCompletedJobs } from "../lib/zip";
 import { settingsForPreset, type ImageJob, type ImageSettings, type WorkerRequest, type WorkerResponse } from "../lib/types";
 
@@ -26,6 +27,7 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
   const [isProcessing, setIsProcessing] = useState(false);
   const workerRef = useRef<Worker | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const concurrency = 2;
 
   const totals = useMemo(() => {
     const source = jobs.reduce((sum, job) => sum + job.sourceSize, 0);
@@ -59,6 +61,20 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
     ]);
   }
 
+  useEffect(() => {
+    setJobs((current) => {
+      const nextNames = uniqueNames(current.map((job, index) => outputNameFor(job.file, index, settings)));
+
+      return current.map((job, index) => {
+        if (job.status === "done" || job.status === "processing") {
+          return job;
+        }
+
+        return { ...job, outputName: nextNames[index] };
+      });
+    });
+  }, [settings]);
+
   function resetJobs() {
     setJobs([]);
   }
@@ -80,7 +96,7 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
     const worker = getWorker();
     const queuedJobs = jobs.filter((job) => job.status === "queued" || job.status === "failed");
 
-    for (const job of queuedJobs) {
+    await runWithConcurrency(queuedJobs, concurrency, async (job) => {
       setJobs((current) =>
         current.map((item) => (item.id === job.id ? { ...item, status: "processing", progress: 35, error: undefined } : item))
       );
@@ -118,7 +134,7 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
           return { ...item, status: "failed", progress: 0, error: response.error };
         })
       );
-    }
+    });
 
     setIsProcessing(false);
   }
@@ -139,6 +155,7 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
           <span>{jobs.length} files</span>
           <span>{formatBytes(totals.source)}</span>
           <span>{totals.completed} done</span>
+          <span>{concurrency} workers</span>
         </div>
       </header>
 

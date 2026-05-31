@@ -10,12 +10,18 @@
     "dev": "npm --workspace @littlepng/web run dev",
     "build": "npm --workspace @littlepng/web run build",
     "preview": "npm --workspace @littlepng/web run preview",
+    "test": "npm --workspace @littlepng/web run test",
     "typecheck": "npm --workspace @littlepng/web run typecheck",
     "codec:fetch": "cargo fetch --manifest-path packages/pngquant-wasm/Cargo.toml",
-    "codec:check": "cargo check --manifest-path packages/pngquant-wasm/Cargo.toml"
+    "codec:check": "cargo check --manifest-path packages/pngquant-wasm/Cargo.toml",
+    "codec:test": "cargo test --manifest-path packages/pngquant-wasm/Cargo.toml",
+    "codec:build-wasm": "cargo build --manifest-path packages/pngquant-wasm/Cargo.toml --target wasm32-unknown-unknown"
   },
   "overrides": {
     "css-tree": "3.1.0",
     "prismjs": "1.29.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.7"
   }
 }

@@ -76,6 +76,13 @@ Phase 2:
   - optional lossless pass.
 - Add transparent PNG fixtures and visual checks.
 
+Current implementation status:
+
+- `packages/pngquant-wasm` exposes a narrow `quantize_rgba` adapter around `imagequant`.
+- The adapter accepts RGBA pixels and returns palette RGBA bytes plus indexed pixels.
+- Native `cargo check` and `cargo test` validate the adapter API.
+- `npm run codec:build-wasm` verifies the package can compile for `wasm32-unknown-unknown` after the target std files are present in the active Rust toolchain.
+
 ## Sources
 
 - pngquant homepage: https://pngquant.org/

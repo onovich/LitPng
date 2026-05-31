@@ -210,8 +210,11 @@ Rules:
 Before every commit:
 
 - `npm run typecheck`
+- `npm run test`
 - `npm run build`
 - `cargo check --manifest-path packages/pngquant-wasm/Cargo.toml`
+- `cargo test --manifest-path packages/pngquant-wasm/Cargo.toml`
+- `npm run codec:build-wasm`
 - Confirm no `node_modules`, `target`, or `apps/web/dist` files are staged.
 - Confirm new code follows dependency direction.
 - Confirm docs stay UTF-8 without BOM.
