@@ -36,5 +36,13 @@ Project-specific workflow configs live at:
 
 Do not silently fall back to generic git/build/test behavior when those configs exist. Update this section and the workflow configs deliberately when project policy changes.
 
+Project memory and implementation lessons live at:
+
+- `docs/project-lessons.md`
+
+For manual browser smoke, double-click:
+
+- `ManualSmoke.cmd`
+
 <!-- /codex-init-flow -->
 

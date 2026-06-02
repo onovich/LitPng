@@ -117,6 +117,26 @@ h1 {
   justify-content: flex-end;
 }
 
+.topbarTools {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.languageSwitch {
+  border-radius: 999px;
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.languageSwitch span {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 28px;
+}
+
 .metrics span,
 .dropStats span,
 .status {
@@ -222,6 +242,10 @@ label {
   padding: 4px;
 }
 
+.segmented.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .segmented button {
   border: 0;
   border-radius: 6px;
@@ -232,6 +256,50 @@ label {
 .segmented .selected {
   background: var(--accent);
   color: #ffffff;
+}
+
+.segmented button:disabled {
+  background: transparent;
+}
+
+.lossMeter {
+  align-items: center;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr auto auto;
+  min-height: 42px;
+  padding: 8px 10px;
+}
+
+.lossMeter span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.lossMeter strong {
+  color: var(--accent-strong);
+}
+
+.lossMeter em {
+  border: 1px solid rgba(30, 111, 92, 0.25);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-style: normal;
+  padding: 4px 8px;
+}
+
+.lossMeter.medium strong,
+.lossMeter.medium em {
+  color: var(--gold);
+}
+
+.lossMeter.high strong,
+.lossMeter.high em {
+  color: var(--danger);
 }
 
 .actions {
@@ -312,6 +380,11 @@ label {
   color: var(--accent-strong);
 }
 
+.status.kept {
+  border-color: rgba(187, 122, 33, 0.36);
+  color: var(--gold);
+}
+
 .status.failed {
   border-color: rgba(179, 57, 57, 0.3);
   color: var(--danger);
@@ -332,6 +405,10 @@ label {
   }
 
   .metrics {
+    justify-content: flex-start;
+  }
+
+  .topbarTools {
     justify-content: flex-start;
   }
 

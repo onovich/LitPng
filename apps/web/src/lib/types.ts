@@ -3,8 +3,10 @@ import type { ToolPage } from "../data/toolPages";
 export type OutputFormat = "original" | "image/jpeg" | "image/png" | "image/webp";
 export type CropMode = "fit" | "fill" | "crop";
 export type CropAnchor = "center" | "top" | "bottom" | "left" | "right";
+export type CompressionMode = "lossless" | "lossy";
 
 export type ImageSettings = {
+  compressionMode: CompressionMode;
   outputFormat: OutputFormat;
   quality: number;
   renamePattern: string;
@@ -34,6 +36,8 @@ export type ImageJob = {
   outputName: string;
   sourceSize: number;
   sourceType: string;
+  sourceWidth?: number;
+  sourceHeight?: number;
   status: ImageJobStatus;
   progress: number;
   result?: ProcessedImage;
@@ -48,6 +52,7 @@ export type ProcessedImage = {
   height: number;
   size: number;
   durationMs: number;
+  outcome: "compressed" | "kept-original" | "converted" | "transformed";
 };
 
 export type WorkerRequest = {
@@ -72,6 +77,7 @@ export type WorkerResponse =
 
 export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
   const base: ImageSettings = {
+    compressionMode: "lossless",
     outputFormat: "original",
     quality: 0.82,
     renamePattern: "{original}",
@@ -92,7 +98,7 @@ export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
   }
 
   if (preset === "jpg") {
-    return { ...base, outputFormat: "image/jpeg", quality: 0.78 };
+    return { ...base, compressionMode: "lossy", outputFormat: "image/jpeg", quality: 0.78 };
   }
 
   if (preset === "bulk") {
@@ -104,7 +110,7 @@ export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
   }
 
   if (preset === "resize") {
-    return { ...base, maxWidth: 1600, cropMode: "fit" };
+    return { ...base, compressionMode: "lossy", maxWidth: 1600, cropMode: "fit" };
   }
 
   return base;
