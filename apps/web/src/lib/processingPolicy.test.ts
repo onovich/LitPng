@@ -127,4 +127,29 @@ describe("shouldKeepOriginal", () => {
       )
     ).toEqual({ percent: 0, label: "None" });
   });
+
+  it("accounts for palette quantization in lossy PNG estimates", () => {
+    const estimate = estimateVisualLoss(
+      {
+        compressionMode: "lossy",
+        outputFormat: "image/png",
+        quality: 0.82,
+        renamePattern: "{original}",
+        prefix: "",
+        suffix: "",
+        lowercase: true,
+        hyphenate: true,
+        stripSpecial: true,
+        maxWidth: 0,
+        maxHeight: 0,
+        cropMode: "fit",
+        cropAnchor: "center",
+        background: "#ffffff"
+      },
+      []
+    );
+
+    expect(estimate.percent).toBeGreaterThan(0);
+    expect(estimate.label).toBe("Low");
+  });
 });

@@ -5,9 +5,13 @@ edition = "2021"
 license = "UNLICENSED"
 publish = false
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 imagequant = { version = "4.0", default-features = false }
+png = "0.17"
 wasm-bindgen = "0.2"

@@ -63,6 +63,10 @@ function formatLoss(outputType: string, quality: number): number {
     return Math.max(3, (1 - quality) * 58);
   }
 
+  if (outputType === "image/png") {
+    return Math.max(2, (1 - quality) * 45);
+  }
+
   return 0;
 }
 

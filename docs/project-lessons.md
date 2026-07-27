@@ -44,7 +44,12 @@ Important details:
 - It does not decode PNG files.
 - It does not encode final PNG files.
 - The browser pipeline still needs separate decode, resize/crop, and encode stages.
-- For the current browser worker, `@jsquash/jpeg` provides MozJPEG output and `@jsquash/png` provides PNG encoding.
+- The Rust adapter now owns the final indexed PNG encode so palette alpha and
+  indices cannot be separated accidentally at the TypeScript boundary.
+- For the current browser worker, lossy PNG uses the generated imagequant WASM,
+  lossless PNG uses `@jsquash/png`, and JPEG uses MozJPEG via `@jsquash/jpeg`.
+- JPEG product policy belongs outside the worker plumbing: photo inputs may use
+  chroma subsampling, while PNG graphics converted to JPEG use 4:4:4 chroma.
 - Vite workers that import WASM encoder packages need `worker.format = "es"` in Astro/Vite config; the default IIFE worker format can fail with code-splitting/WASM imports.
 
 Rust adapter rule:

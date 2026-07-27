@@ -94,7 +94,7 @@ export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
   };
 
   if (preset === "png") {
-    return { ...base, outputFormat: "image/png", quality: 0.9 };
+    return { ...base, compressionMode: "lossy", outputFormat: "image/png", quality: 0.82 };
   }
 
   if (preset === "jpg") {

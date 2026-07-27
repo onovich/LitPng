@@ -722,7 +722,10 @@ imagequant = { version = "4.0", default-features = false }
 当前研发落点：
 
 - `packages/pngquant-wasm` 锁定并下载 `imagequant = "4.0"`。
-- Phase 1 用浏览器 Canvas/OffscreenCanvas 建立可运行的批量处理链路，并通过 `@jsquash/jpeg` / `@jsquash/png` 提供 WASM 编码路径。
-- Phase 2 已建立 `imagequant` WASM adapter：RGBA -> palette RGBA + indexed pixels。下一步是在该 adapter 输出后接 indexed PNG encoder，替换当前通用 PNG WASM encoder。
+- 浏览器 Canvas/OffscreenCanvas 负责 decode、resize/crop，Worker 隔离编解码耗时。
+- PNG 有损主链路已完成：RGBA -> imagequant WASM -> palette/index -> 带透明度的 indexed PNG；最低质量不满足时回退无损 PNG，同格式且不节省体积时保留原图。
+- PNG 无损模式继续使用 `@jsquash/png`，不经过 imagequant。
+- JPEG 继续使用 `@jsquash/jpeg` 的 MozJPEG WASM，并按输入场景自动应用照片或图形/UI 参数；PNG 转 JPEG 使用 4:4:4 色度以保护文字和彩色边缘。
+- GIF 保持独立后续工具域，不混入当前静态图片队列。
 
 详细决策见 `docs/pngquant-library-decision.md`。

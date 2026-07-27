@@ -1,7 +1,8 @@
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct QuantizedPngPixels {
+pub struct QuantizedPng {
+    png_bytes: Vec<u8>,
     palette_rgba: Vec<u8>,
     indexed_pixels: Vec<u8>,
     palette_size: usize,
@@ -11,7 +12,12 @@ pub struct QuantizedPngPixels {
 }
 
 #[wasm_bindgen]
-impl QuantizedPngPixels {
+impl QuantizedPng {
+    #[wasm_bindgen(getter)]
+    pub fn png_bytes(&self) -> Vec<u8> {
+        self.png_bytes.clone()
+    }
+
     #[wasm_bindgen(getter)]
     pub fn palette_rgba(&self) -> Vec<u8> {
         self.palette_rgba.clone()
@@ -56,9 +62,16 @@ pub fn quantize_rgba(
     min_quality: u8,
     target_quality: u8,
     speed: i32,
-) -> Result<QuantizedPngPixels, JsValue> {
-    quantize_rgba_core(rgba_pixels, width, height, min_quality, target_quality, speed)
-        .map_err(|error| JsValue::from_str(&error))
+) -> Result<QuantizedPng, JsValue> {
+    quantize_rgba_core(
+        rgba_pixels,
+        width,
+        height,
+        min_quality,
+        target_quality,
+        speed,
+    )
+    .map_err(|error| JsValue::from_str(&error))
 }
 
 fn quantize_rgba_core(
@@ -68,7 +81,7 @@ fn quantize_rgba_core(
     min_quality: u8,
     target_quality: u8,
     speed: i32,
-) -> Result<QuantizedPngPixels, String> {
+) -> Result<QuantizedPng, String> {
     if rgba_pixels.len() != width.saturating_mul(height).saturating_mul(4) {
         return Err("RGBA buffer length does not match width * height * 4.".to_string());
     }
@@ -92,6 +105,9 @@ fn quantize_rgba_core(
     let mut result = attributes
         .quantize(&mut image)
         .map_err(|error| format!("Failed to quantize image: {error:?}"))?;
+    result
+        .set_dithering_level(1.0)
+        .map_err(|error| format!("Failed to set dithering: {error:?}"))?;
     let quality = result.quantization_quality().unwrap_or(0);
     let (palette, indexed_pixels) = result
         .remapped(&mut image)
@@ -101,8 +117,10 @@ fn quantize_rgba_core(
         .into_iter()
         .flat_map(|color| [color.r, color.g, color.b, color.a])
         .collect::<Vec<_>>();
+    let png_bytes = encode_indexed_png(width, height, &palette_rgba, &indexed_pixels)?;
 
-    Ok(QuantizedPngPixels {
+    Ok(QuantizedPng {
+        png_bytes,
         palette_rgba,
         indexed_pixels,
         palette_size,
@@ -110,6 +128,43 @@ fn quantize_rgba_core(
         height,
         quality,
     })
+}
+
+fn encode_indexed_png(
+    width: usize,
+    height: usize,
+    palette_rgba: &[u8],
+    indexed_pixels: &[u8],
+) -> Result<Vec<u8>, String> {
+    let palette_rgb = palette_rgba
+        .chunks_exact(4)
+        .flat_map(|color| [color[0], color[1], color[2]])
+        .collect::<Vec<_>>();
+    let palette_alpha = palette_rgba
+        .chunks_exact(4)
+        .map(|color| color[3])
+        .collect::<Vec<_>>();
+    let mut output = Vec::new();
+
+    {
+        let mut encoder = png::Encoder::new(&mut output, width as u32, height as u32);
+        encoder.set_color(png::ColorType::Indexed);
+        encoder.set_depth(png::BitDepth::Eight);
+        encoder.set_palette(palette_rgb);
+        encoder.set_trns(palette_alpha);
+        encoder.set_compression(png::Compression::Best);
+        let mut writer = encoder
+            .write_header()
+            .map_err(|error| format!("Failed to write PNG header: {error}"))?;
+        writer
+            .write_image_data(indexed_pixels)
+            .map_err(|error| format!("Failed to write PNG pixels: {error}"))?;
+        writer
+            .finish()
+            .map_err(|error| format!("Failed to finish PNG: {error}"))?;
+    }
+
+    Ok(output)
 }
 
 #[cfg(test)]
@@ -122,13 +177,15 @@ mod tests {
             255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 0, 0, 255,
         ];
 
-        let result = quantize_rgba_core(&pixels, 2, 2, 0, 90, 10).expect("quantization should succeed");
+        let result =
+            quantize_rgba_core(&pixels, 2, 2, 0, 90, 10).expect("quantization should succeed");
 
         assert_eq!(result.width, 2);
         assert_eq!(result.height, 2);
         assert_eq!(result.indexed_pixels.len(), 4);
         assert!(result.palette_size > 0);
         assert_eq!(result.palette_rgba.len(), result.palette_size * 4);
+        assert_eq!(&result.png_bytes[..8], b"\x89PNG\r\n\x1a\n");
     }
 
     #[test]

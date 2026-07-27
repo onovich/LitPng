@@ -1,6 +1,8 @@
 import type { ImageSettings, WorkerRequest, WorkerResponse } from "../lib/types";
+import { jpegEncodingOptions, pngQuantizationOptions } from "../lib/codecPolicy";
 import { createResizeCropPlan } from "../lib/geometry";
 import { shouldKeepOriginal } from "../lib/processingPolicy";
+import { encodeQuantizedPng } from "../codecs/pngquant";
 
 function outputType(inputType: string, settings: ImageSettings): string {
   if (settings.outputFormat !== "original") {
@@ -14,7 +16,18 @@ function outputType(inputType: string, settings: ImageSettings): string {
   return "image/png";
 }
 
-async function encodeCanvas(canvas: OffscreenCanvas, type: string, quality: number): Promise<Blob> {
+async function encodeLosslessPng(imageData: ImageData): Promise<Blob> {
+  const { encode } = await import("@jsquash/png");
+  const bytes = await encode(imageData);
+  return new Blob([bytes], { type: "image/png" });
+}
+
+async function encodeCanvas(
+  canvas: OffscreenCanvas,
+  type: string,
+  inputType: string,
+  settings: ImageSettings
+): Promise<Blob> {
   const context = canvas.getContext("2d", { alpha: true });
 
   if (!context) {
@@ -25,17 +38,23 @@ async function encodeCanvas(canvas: OffscreenCanvas, type: string, quality: numb
 
   if (type === "image/jpeg") {
     const { encode } = await import("@jsquash/jpeg");
-    const bytes = await encode(imageData, { quality: Math.round(quality * 100) });
+    const bytes = await encode(imageData, jpegEncodingOptions(inputType, settings.quality));
     return new Blob([bytes], { type });
   }
 
   if (type === "image/png") {
-    const { encode } = await import("@jsquash/png");
-    const bytes = await encode(imageData);
-    return new Blob([bytes], { type });
+    if (settings.compressionMode === "lossy") {
+      try {
+        return await encodeQuantizedPng(imageData, pngQuantizationOptions(settings.quality));
+      } catch {
+        return encodeLosslessPng(imageData);
+      }
+    }
+
+    return encodeLosslessPng(imageData);
   }
 
-  return canvas.convertToBlob({ type, quality });
+  return canvas.convertToBlob({ type, quality: settings.quality });
 }
 
 function hasPixelTransform(
@@ -105,7 +124,7 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
     context.drawImage(bitmap, box.sx, box.sy, box.sw, box.sh, box.dx, box.dy, box.dw, box.dh);
     bitmap.close();
 
-    const encodedBlob = await encodeCanvas(canvas, type, request.settings.quality);
+    const encodedBlob = await encodeCanvas(canvas, type, request.file.type, request.settings);
     const transformed = hasPixelTransform(source, plan);
     const keptOriginal = shouldKeepOriginal({
       sourceSize: request.file.size,
