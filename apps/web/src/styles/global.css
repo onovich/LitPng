@@ -191,6 +191,44 @@ h1 {
   padding: 0 18px;
 }
 
+.dropActions {
+  align-items: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.controlHint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.savedPresetManager {
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.savedPresetEditor {
+  align-items: end;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.savedPresetEditor button {
+  min-height: 38px;
+  padding: 0 9px;
+}
+
+.savedPresetEditor button span {
+  display: none;
+}
+
 .dropStats {
   display: flex;
   flex-wrap: wrap;
@@ -199,8 +237,53 @@ h1 {
 }
 
 .controls {
+  border: 0;
   display: grid;
   gap: 12px;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.queueControls {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 12px;
+}
+
+.queueControls progress {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
+.queueProgressText,
+.queueControlActions,
+.queuePagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.queueProgressText {
+  color: var(--muted);
+  font-size: 13px;
+  justify-content: space-between;
+}
+
+.queueControlActions button,
+.queuePagination button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.queuePagination {
+  justify-content: center;
+  margin: 12px 0;
 }
 
 .controlGroup {
@@ -230,6 +313,17 @@ label {
   display: grid;
   font-size: 13px;
   gap: 5px;
+}
+
+.checkLabel {
+  align-items: center;
+  grid-template-columns: 18px minmax(0, 1fr);
+}
+
+.checkLabel input {
+  height: 16px;
+  margin: 0;
+  width: 16px;
 }
 
 .segmented {
@@ -335,12 +429,69 @@ label {
   overflow: hidden;
 }
 
+.batchHistory {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.historyHeading,
+.historyActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.historyHeading {
+  justify-content: space-between;
+}
+
+.historyHeading h2 {
+  color: var(--accent-strong);
+  font-size: 18px;
+  margin: 0;
+}
+
+.historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.historyList li {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.historyList p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.historyError {
+  color: var(--danger);
+}
+
+.batchHistory button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .tableHeader,
 .fileRow {
   align-items: center;
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(170px, 1.2fr) minmax(170px, 1.2fr) minmax(140px, 0.8fr) minmax(110px, 0.7fr) 44px;
+  grid-template-columns: minmax(170px, 1.2fr) minmax(170px, 1.2fr) minmax(140px, 0.8fr) minmax(110px, 0.7fr) 84px;
   min-height: 48px;
   padding: 0 14px;
 }
@@ -358,10 +509,107 @@ label {
   font-size: 14px;
 }
 
-.fileRow > button {
+.fileActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.fileActions button {
   min-height: 34px;
   padding: 0;
   width: 36px;
+}
+
+.comparisonDialog {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  max-height: calc(100vh - 32px);
+  max-width: 960px;
+  overflow: auto;
+  padding: 18px;
+  width: calc(100% - 32px);
+}
+
+.comparisonDialog::backdrop {
+  background: rgba(23, 33, 27, 0.68);
+}
+
+.comparisonHeader,
+.comparisonHeader > div,
+.comparisonGrid figure,
+.comparisonGrid figcaption {
+  margin: 0;
+}
+
+.comparisonHeader {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.comparisonHeader p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+.comparisonHeader h2 {
+  font-size: 22px;
+  margin: 0;
+}
+
+.comparisonHeader button {
+  min-height: 36px;
+  padding: 0;
+  width: 36px;
+}
+
+.comparisonGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.comparisonImage {
+  align-items: center;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+  min-height: 240px;
+  overflow: hidden;
+}
+
+.comparisonImage img {
+  display: block;
+  height: auto;
+  max-height: 58vh;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.comparisonGrid figcaption {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+
+.comparisonGrid figcaption span,
+.comparisonLoading {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.comparisonError {
+  color: var(--danger);
+  margin: 24px 0;
 }
 
 .truncate {
@@ -445,8 +693,16 @@ label {
     grid-column: 1;
   }
 
-  .fileRow > button {
+  .fileActions {
     grid-column: 2;
     grid-row: 1;
+  }
+
+  .comparisonGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparisonImage {
+    min-height: 180px;
   }
 }

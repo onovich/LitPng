@@ -11,10 +11,18 @@ cropping, and conversion.
 
 - Runs locally in the browser; processing does not require uploads.
 - Batch image transformation, renaming, and export.
+- Custom naming templates with original, index, prefix, suffix, folder, and date tokens.
+- Optional preservation of imported folder hierarchy inside ZIP exports.
 - Rust `imagequant` WASM for lossy indexed PNG with palette alpha.
 - `@jsquash/png` for lossless PNG and MozJPEG from `@jsquash/jpeg` for JPEG.
 - Minimum-quality, lossless-fallback, and keep-original safeguards.
 - Optional per-image target size using a bounded quality search.
+- Downloadable CSV compression reports for completed batches.
+- Keyboard-accessible before/after previews generated from the actual encoded output.
+- One-click Shopify, WordPress, and Open Graph publishing presets.
+- Browser-local saved custom presets with apply, overwrite, and delete controls.
+- Opt-in local batch history with summary statistics and reusable settings, without storing image files.
+- Bounded queue decoding, pause/resume/stop controls, 50-row pagination, and explicit completed-result cleanup.
 
 ## Getting started
 
@@ -61,6 +69,9 @@ npm run codec:build-wasm
 - [`docs/phase0-architecture.md`](docs/phase0-architecture.md)
 - [`docs/pngquant-library-decision.md`](docs/pngquant-library-decision.md)
 - [`docs/licensing-release-gate.md`](docs/licensing-release-gate.md)
+- [`docs/publishing-presets.md`](docs/publishing-presets.md)
+- [`docs/batch-history.md`](docs/batch-history.md)
+- [`docs/large-queue.md`](docs/large-queue.md)
 - [`docs/project-lessons.md`](docs/project-lessons.md)
 
 ## License

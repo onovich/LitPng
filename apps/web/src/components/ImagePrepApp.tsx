@@ -1,6 +1,9 @@
 import {
   Archive,
   Download,
+  Eye,
+  FileDown,
+  FolderOpen,
   ImagePlus,
   Languages,
   Play,
@@ -11,11 +14,21 @@ import {
   Type
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import ImageComparison from "./ImageComparison";
+import SavedPresetManager from "./SavedPresetManager";
+import BatchHistory from "./BatchHistory";
+import QueueControls from "./QueueControls";
+import { useBatchHistory } from "../hooks/useBatchHistory";
+import { createBatchHistoryEntry } from "../lib/batchHistory";
 import type { ToolPage } from "../data/toolPages";
-import { formatBytes, outputNameFor, uniqueNames } from "../lib/filenames";
+import { archivePathFor, formatBytes, outputNameFor, uniqueNamesByDirectory } from "../lib/filenames";
 import { detectLanguage, languages, nextLanguage, translateHeading, translations, type LanguageCode, type Translation } from "../lib/i18n";
 import { estimateVisualLoss, normalizedSettings } from "../lib/processingPolicy";
-import { runWithConcurrency } from "../lib/queue";
+import { publishingPresets, settingsForPublishingPreset, type PublishingPresetId } from "../lib/publishingPresets";
+import type { SavedPreset } from "../lib/savedPresets";
+import { createQueueController, runWithConcurrency, type QueueController } from "../lib/queue";
+import { requestProcessing } from "../lib/workerClient";
+import { compressionReportBlob } from "../lib/report";
 import { downloadBlob, zipCompletedJobs } from "../lib/zip";
 import { settingsForPreset, type ImageJob, type ImageSettings, type WorkerRequest, type WorkerResponse } from "../lib/types";
 
@@ -25,13 +38,19 @@ type Props = {
 };
 
 const LANGUAGE_STORAGE_KEY = "littlepng-language";
+const QUEUE_PAGE_SIZE = 50;
 
 function readInitialLanguage(): LanguageCode {
   if (typeof window === "undefined") {
     return "en";
   }
 
-  const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  let stored: string | null = null;
+  try {
+    stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  } catch {
+    // A blocked storage policy must not prevent local image processing.
+  }
   const storedLanguage = languages.find((language) => language.code === stored)?.code;
 
   if (storedLanguage) {
@@ -97,10 +116,25 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
   const [settings, setSettings] = useState<ImageSettings>(() => normalizedSettings(settingsForPreset(preset)));
   const [jobs, setJobs] = useState<ImageJob[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ completed: 0, total: 0 });
+  const [queuePage, setQueuePage] = useState(0);
   const [language, setLanguage] = useState<LanguageCode>(() => readInitialLanguage());
+  const [comparisonJobId, setComparisonJobId] = useState<string>();
+  const [comparisonError, setComparisonError] = useState<string>();
+  const [publishingPreset, setPublishingPreset] = useState<PublishingPresetId>("custom");
+  const [savedPresetId, setSavedPresetId] = useState<string>();
+  const history = useBatchHistory();
   const workerRef = useRef<Worker | null>(null);
+  const queueControllerRef = useRef<QueueController | null>(null);
+  const workerAbortRef = useRef<AbortController | null>(null);
+  const metadataChainRef = useRef(Promise.resolve());
+  const metadataGenerationRef = useRef(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const concurrency = 2;
+  const directoryRef = useRef<HTMLInputElement | null>(null);
+  // One actual Worker: never overlap two large decodes/encodes inside it.
+  const concurrency = 1;
   const t = translations[language];
   const languageLabel = languages.find((option) => option.code === language)?.shortLabel ?? "EN";
   const isLossless = settings.compressionMode === "lossless";
@@ -120,7 +154,8 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
     const source = jobs.reduce((sum, job) => sum + job.sourceSize, 0);
     const output = jobs.reduce((sum, job) => sum + (job.result?.size ?? 0), 0);
     const completed = jobs.filter((job) => job.status === "done").length;
-    const saved = output > 0 ? source - output : 0;
+    const completedSource = jobs.reduce((sum, job) => sum + (job.result ? job.sourceSize : 0), 0);
+    const saved = completedSource - output;
     return { source, output, completed, saved };
   }, [jobs]);
   const lossEstimate = useMemo(() => estimateVisualLoss(settings, jobs), [settings, jobs]);
@@ -131,9 +166,30 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
     High: t.high
   }[lossEstimate.label];
   const pageTitle = translateHeading(pageHeading, language);
+  const comparisonJob = jobs.find((job) => job.id === comparisonJobId);
+  const pageCount = Math.max(1, Math.ceil(jobs.length / QUEUE_PAGE_SIZE));
+  const visiblePage = Math.min(queuePage, pageCount - 1);
+  const visibleJobs = jobs.slice(visiblePage * QUEUE_PAGE_SIZE, (visiblePage + 1) * QUEUE_PAGE_SIZE);
 
   function updateSettings(next: Partial<ImageSettings>) {
+    setPublishingPreset("custom");
+    setSavedPresetId(undefined);
     setSettings((current) => normalizedSettings({ ...current, ...next }));
+  }
+
+  function applyPublishingPreset(nextPreset: PublishingPresetId) {
+    setPublishingPreset(nextPreset);
+    setSavedPresetId(undefined);
+
+    if (nextPreset !== "custom") {
+      setSettings(normalizedSettings(settingsForPublishingPreset(nextPreset)));
+    }
+  }
+
+  function applySavedPreset(savedPreset: SavedPreset) {
+    setPublishingPreset("custom");
+    setSavedPresetId(savedPreset.id);
+    setSettings(normalizedSettings(savedPreset.settings));
   }
 
   function switchLanguage() {
@@ -141,7 +197,11 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
     setLanguage(next);
 
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, next);
+      try {
+        window.localStorage.setItem(LANGUAGE_STORAGE_KEY, next);
+      } catch {
+        // The language change still works for this session.
+      }
       document.documentElement.lang = next;
     }
   }
@@ -150,14 +210,31 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
     document.documentElement.lang = language;
   }, [language]);
 
+  useEffect(() => () => {
+    metadataGenerationRef.current += 1;
+    queueControllerRef.current?.cancel();
+    workerAbortRef.current?.abort();
+    workerRef.current?.terminate();
+    workerRef.current = null;
+  }, []);
+
   function addFiles(fileList: FileList | File[]) {
+    if (queueControllerRef.current) return;
     const imageFiles = Array.from(fileList).filter((file) => file.type.startsWith("image/"));
-    const rawNames = imageFiles.map((file, index) => outputNameFor(file, jobs.length + index, settings));
-    const names = uniqueNames(rawNames);
+    const relativePaths = imageFiles.map((file) => file.webkitRelativePath || file.name);
+    const rawNames = imageFiles.map((file, index) =>
+      outputNameFor(file, jobs.length + index, settings, { relativePath: file.webkitRelativePath })
+    );
+    const names = uniqueNamesByDirectory(
+      [...jobs.map((job) => job.outputName), ...rawNames],
+      [...jobs.map((job) => job.sourceRelativePath), ...relativePaths],
+      settings.preserveFolders
+    ).slice(jobs.length);
     const newJobs = imageFiles.map((file, index) => ({
       id: crypto.randomUUID(),
       file,
       sourceName: file.name,
+      sourceRelativePath: file.webkitRelativePath || file.name,
       outputName: names[index],
       sourceSize: file.size,
       sourceType: file.type || "image/unknown",
@@ -167,21 +244,30 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
 
     setJobs((current) => [...current, ...newJobs]);
 
-    newJobs.forEach((job) => {
-      createImageBitmap(job.file)
-        .then((bitmap) => {
+    const generation = metadataGenerationRef.current;
+    metadataChainRef.current = metadataChainRef.current.then(async () => {
+      for (const job of newJobs) {
+        if (metadataGenerationRef.current !== generation) return;
+        try {
+          const bitmap = await createImageBitmap(job.file);
           const sourceWidth = bitmap.width;
           const sourceHeight = bitmap.height;
           bitmap.close();
-          setJobs((current) => current.map((item) => (item.id === job.id ? { ...item, sourceWidth, sourceHeight } : item)));
-        })
-        .catch(() => undefined);
+          if (metadataGenerationRef.current === generation) {
+            setJobs((current) => current.map((item) => (item.id === job.id ? { ...item, sourceWidth, sourceHeight } : item)));
+          }
+        } catch {
+          // The processing worker reports per-file decode failures later.
+        }
+      }
     });
   }
 
   useEffect(() => {
     setJobs((current) => {
-      const nextNames = uniqueNames(current.map((job, index) => outputNameFor(job.file, index, settings)));
+      const nextNames = uniqueNamesByDirectory(current.map((job, index) =>
+        outputNameFor(job.file, index, settings, { relativePath: job.sourceRelativePath })
+      ), current.map((job) => job.sourceRelativePath), settings.preserveFolders);
 
       return current.map((job, index) => {
         if (job.status === "done" || job.status === "processing") {
@@ -194,7 +280,15 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
   }, [settings]);
 
   function resetJobs() {
+    if (queueControllerRef.current) return;
+    metadataGenerationRef.current += 1;
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    setComparisonJobId(undefined);
+    setComparisonError(undefined);
     setJobs([]);
+    setQueuePage(0);
+    setBatchProgress({ completed: 0, total: 0 });
   }
 
   function getWorker() {
@@ -205,61 +299,146 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
     return workerRef.current;
   }
 
-  async function processQueue() {
-    if (isProcessing) {
+  async function openComparison(job: ImageJob) {
+    if (!job.result) {
       return;
     }
 
-    setIsProcessing(true);
+    setComparisonJobId(job.id);
+    setComparisonError(undefined);
+    if (job.result.sourcePreview && job.result.outputPreview) {
+      return;
+    }
+
     const worker = getWorker();
-    const queuedJobs = jobs.filter((job) => job.status === "queued" || job.status === "failed");
+    const response = await new Promise<WorkerResponse>((resolve) => {
+      const onMessage = (event: MessageEvent<WorkerResponse>) => {
+        if (
+          event.data.jobId !== job.id ||
+          (event.data.type !== "preview" && event.data.type !== "preview-failed")
+        ) {
+          return;
+        }
 
-    await runWithConcurrency(queuedJobs, concurrency, async (job) => {
-      setJobs((current) =>
-        current.map((item) => (item.id === job.id ? { ...item, status: "processing", progress: 35, error: undefined } : item))
-      );
+        worker.removeEventListener("message", onMessage);
+        resolve(event.data);
+      };
 
-      const response = await new Promise<WorkerResponse>((resolve) => {
-        const onMessage = (event: MessageEvent<WorkerResponse>) => {
-          if (event.data.jobId !== job.id) {
-            return;
-          }
-
-          worker.removeEventListener("message", onMessage);
-          resolve(event.data);
-        };
-
-        worker.addEventListener("message", onMessage);
-        worker.postMessage({
-          type: "process",
-          jobId: job.id,
-          file: job.file,
-          outputName: job.outputName,
-          settings
-        } satisfies WorkerRequest);
-      });
-
-      setJobs((current) =>
-        current.map((item) => {
-          if (item.id !== job.id) {
-            return item;
-          }
-
-          if (response.type === "done") {
-            return { ...item, status: "done", progress: 100, result: response.result };
-          }
-
-          return { ...item, status: "failed", progress: 0, error: response.error };
-        })
-      );
+      worker.addEventListener("message", onMessage);
+      worker.postMessage({
+        type: "preview",
+        jobId: job.id,
+        file: job.file,
+        outputBlob: job.result!.blob
+      } satisfies WorkerRequest);
     });
 
-    setIsProcessing(false);
+    if (response.type === "preview") {
+      setJobs((current) => current.map((item) =>
+        item.id === job.id && item.result
+          ? { ...item, result: { ...item.result, sourcePreview: response.sourcePreview, outputPreview: response.outputPreview } }
+          : item
+      ));
+    } else if (response.type === "preview-failed") {
+      setComparisonError(response.error);
+    }
+  }
+
+  async function processQueue() {
+    if (queueControllerRef.current) {
+      return;
+    }
+
+    const queuedJobs = jobs.filter((job) => job.status === "queued" || job.status === "failed" || job.status === "cancelled");
+    if (queuedJobs.length === 0) return;
+    const historyToken = history.beginBatch();
+    const batchSettings = { ...settings };
+    const startedAt = performance.now();
+    const finishedJobs: ImageJob[] = [];
+    const controller = createQueueController();
+    queueControllerRef.current = controller;
+    workerAbortRef.current = new AbortController();
+    setIsPaused(false);
+    setIsStopping(false);
+    setBatchProgress({ completed: 0, total: queuedJobs.length });
+    setIsProcessing(true);
+
+    try {
+      await runWithConcurrency(queuedJobs, concurrency, async (job) => {
+        setJobs((current) =>
+          current.map((item) => (item.id === job.id ? { ...item, status: "processing", progress: 35, error: undefined } : item))
+        );
+
+        let response: Extract<WorkerResponse, { type: "done" | "failed" }>;
+        try {
+          const worker = getWorker();
+          response = await requestProcessing(worker, {
+            type: "process",
+            jobId: job.id,
+            file: job.file,
+            outputName: job.outputName,
+            archivePath: archivePathFor(job.sourceRelativePath, job.outputName, batchSettings.preserveFolders),
+            settings: batchSettings
+          }, () => { workerRef.current = null; }, 120_000, workerAbortRef.current?.signal);
+        } catch {
+          response = { type: "failed", jobId: job.id, error: "Could not start the image worker. Retry this image." };
+        }
+
+        if (response.type === "done") {
+          finishedJobs.push({ ...job, status: "done", result: response.result });
+        } else if (response.type === "failed") {
+          finishedJobs.push({ ...job, status: "failed", result: undefined, error: response.error });
+        }
+        setBatchProgress({ completed: finishedJobs.length, total: queuedJobs.length });
+
+        setJobs((current) =>
+          current.map((item) => {
+            if (item.id !== job.id) {
+              return item;
+            }
+
+            if (response.type === "done") {
+              return { ...item, status: "done", progress: 100, result: response.result };
+            }
+
+            if (response.type === "failed") {
+              return { ...item, status: "failed", progress: 0, error: response.error };
+            }
+
+            return item;
+          })
+        );
+      }, controller);
+
+      if (controller.cancelled) {
+        const finishedIds = new Set(finishedJobs.map((job) => job.id));
+        const stoppedIds = new Set(queuedJobs.filter((job) => !finishedIds.has(job.id)).map((job) => job.id));
+        setJobs((current) => current.map((job) => stoppedIds.has(job.id)
+          ? { ...job, status: "cancelled", progress: 0, error: undefined }
+          : job));
+      }
+
+      if (!workerAbortRef.current?.signal.aborted) {
+        history.recordBatch(historyToken, createBatchHistoryEntry(
+          crypto.randomUUID(), new Date().toISOString(), batchSettings, finishedJobs, performance.now() - startedAt
+        ));
+      }
+    } finally {
+      queueControllerRef.current = null;
+      workerAbortRef.current = null;
+      setIsPaused(false);
+      setIsStopping(false);
+      setIsProcessing(false);
+    }
   }
 
   async function downloadZip() {
     const blob = await zipCompletedJobs(jobs);
     downloadBlob(blob, "littlepng-export.zip");
+  }
+
+  function downloadReport() {
+    downloadBlob(compressionReportBlob(jobs), "littlepng-report.csv");
   }
 
   return (
@@ -295,14 +474,32 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
           <input
             ref={inputRef}
             type="file"
+            disabled={isProcessing}
+            aria-label={t.addImages}
             accept="image/png,image/jpeg,image/webp"
             multiple
             onChange={(event) => event.currentTarget.files && addFiles(event.currentTarget.files)}
           />
-          <button className="dropButton" type="button" onClick={() => inputRef.current?.click()} title={t.addImages}>
-            <ImagePlus aria-hidden="true" />
-            <span>{t.addImages}</span>
-          </button>
+          <input
+            ref={directoryRef}
+            type="file"
+            disabled={isProcessing}
+            aria-label={t.addFolder}
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            {...{ webkitdirectory: "", directory: "" }}
+            onChange={(event) => event.currentTarget.files && addFiles(event.currentTarget.files)}
+          />
+          <div className="dropActions">
+            <button className="dropButton" type="button" disabled={isProcessing} onClick={() => inputRef.current?.click()} title={t.addImages}>
+              <ImagePlus aria-hidden="true" />
+              <span>{t.addImages}</span>
+            </button>
+            <button type="button" disabled={isProcessing} onClick={() => directoryRef.current?.click()} title={t.addFolder}>
+              <FolderOpen aria-hidden="true" />
+              <span>{t.addFolder}</span>
+            </button>
+          </div>
           <div className="dropStats">
             <span>PNG</span>
             <span>JPG</span>
@@ -311,7 +508,7 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
           </div>
         </div>
 
-        <aside className="controls" aria-label={t.controlsLabel}>
+        <fieldset className="controls" disabled={isProcessing} aria-label={t.controlsLabel}>
           <div className="controlGroup">
             <div className="controlTitle">
               <Type aria-hidden="true" />
@@ -319,12 +516,28 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
             </div>
             <label>
               {t.pattern}
-              <select value={settings.renamePattern} onChange={(event) => updateSettings({ renamePattern: event.target.value })}>
-                <option value="{original}">{t.original}</option>
-                <option value="{original}-{index}">{t.originalIndex}</option>
-                <option value="{prefix}-{index}">{t.prefixIndex}</option>
-                <option value="{folder}-{original}">{t.folderOriginal}</option>
-              </select>
+              <input
+                list="rename-pattern-options"
+                value={settings.renamePattern}
+                aria-describedby="rename-pattern-help"
+                onChange={(event) => updateSettings({ renamePattern: event.target.value })}
+              />
+              <datalist id="rename-pattern-options">
+                <option value="{original}" />
+                <option value="{original}-{index}" />
+                <option value="{prefix}-{index}" />
+                <option value="{folder}-{original}" />
+                <option value="{date}-{original}" />
+              </datalist>
+            </label>
+            <small className="controlHint" id="rename-pattern-help">{t.patternHelp}</small>
+            <label className="checkLabel">
+              <input
+                type="checkbox"
+                checked={settings.preserveFolders}
+                onChange={(event) => updateSettings({ preserveFolders: event.target.checked })}
+              />
+              <span>{t.preserveFolders}</span>
             </label>
             <label>
               {t.prefix}
@@ -382,6 +595,40 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
               <span>{t.output}</span>
             </div>
             <label>
+              {t.publishingPreset}
+              <select
+                value={publishingPreset}
+                onChange={(event) => applyPublishingPreset(event.target.value as PublishingPresetId)}
+              >
+                <option value="custom">{t.customPreset}</option>
+                {publishingPresets.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.id === "shopify"
+                      ? t.shopifyPreset
+                      : option.id === "wordpress"
+                        ? t.wordpressPreset
+                        : t.openGraphPreset}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {publishingPreset !== "custom" && (
+              <small className="controlHint">
+                {publishingPreset === "shopify"
+                  ? t.shopifyPresetHint
+                  : publishingPreset === "wordpress"
+                    ? t.wordpressPresetHint
+                    : t.openGraphPresetHint}
+              </small>
+            )}
+            <SavedPresetManager
+              settings={settings}
+              activePresetId={savedPresetId}
+              t={t}
+              onApply={applySavedPreset}
+              onActiveChange={setSavedPresetId}
+            />
+            <label>
               {t.mode}
               <div className="segmented two">
                 {(["lossless", "lossy"] as const).map((mode) => (
@@ -435,7 +682,7 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
               <em>{lossLabel}</em>
             </div>
           </div>
-        </aside>
+        </fieldset>
       </section>
 
       <section className="actions" aria-label={t.actionsLabel}>
@@ -447,16 +694,41 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
           <Archive aria-hidden="true" />
           <span>ZIP</span>
         </button>
-        <button type="button" onClick={resetJobs} disabled={jobs.length === 0} title={t.clearQueue}>
+        <button
+          type="button"
+          onClick={downloadReport}
+          disabled={!jobs.some((job) => job.status === "done" || job.status === "failed")}
+          title={t.downloadReport}
+        >
+          <FileDown aria-hidden="true" />
+          <span>CSV</span>
+        </button>
+        <button type="button" onClick={resetJobs} disabled={jobs.length === 0 || isProcessing} title={t.clearQueue}>
           <Trash2 aria-hidden="true" />
           <span>{t.clearQueue}</span>
         </button>
+        <button type="button" disabled={totals.completed === 0 || isProcessing} onClick={() => {
+          metadataGenerationRef.current += 1;
+          workerRef.current?.terminate();
+          workerRef.current = null;
+          setComparisonJobId(undefined);
+          setJobs((current) => current.filter((job) => job.status !== "done"));
+          setBatchProgress({ completed: 0, total: 0 });
+          setQueuePage(0);
+        }}>{t.queueRemoveCompleted}</button>
         <div className="savings">
           <strong>{formatBytes(Math.max(totals.saved, 0))}</strong>
           <span>{t.saved}</span>
         </div>
       </section>
 
+      <QueueControls
+        t={t} active={isProcessing} paused={isPaused} stopping={isStopping}
+        completed={batchProgress.completed} total={batchProgress.total}
+        onPause={() => { queueControllerRef.current?.pause(); setIsPaused(true); }}
+        onResume={() => { queueControllerRef.current?.resume(); setIsPaused(false); }}
+        onStop={() => { queueControllerRef.current?.cancel(); setIsStopping(true); }}
+      />
       <section className="fileTable" aria-label={t.queueLabel}>
         <div className="tableHeader">
           <span>{t.name}</span>
@@ -469,21 +741,66 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
             <span>{t.queueEmpty}</span>
           </div>
         ) : (
-          jobs.map((job) => (
+          visibleJobs.map((job) => (
             <div className="fileRow" key={job.id}>
               <span className="truncate">{job.sourceName}</span>
               <span className="truncate">{job.outputName}</span>
               <span>{sizeSummary(job, t)}</span>
               <span className={`status ${statusClass(job)}`}>{statusLabel(job, t)}</span>
               {job.result ? (
-                <button type="button" title={t.downloadImage} onClick={() => downloadBlob(job.result!.blob, job.result!.name)}>
-                  <Download aria-hidden="true" />
-                </button>
+                <div className="fileActions">
+                  <button type="button" disabled={isProcessing} title={t.compareImages} onClick={() => void openComparison(job)}>
+                    <Eye aria-hidden="true" />
+                  </button>
+                  <button type="button" title={t.downloadImage} onClick={() => downloadBlob(job.result!.blob, job.result!.name)}>
+                    <Download aria-hidden="true" />
+                  </button>
+                </div>
               ) : null}
             </div>
           ))
         )}
       </section>
+      {pageCount > 1 && (
+        <nav className="queuePagination" aria-label={t.queuePages}>
+          <button type="button" disabled={visiblePage === 0} onClick={() => setQueuePage(visiblePage - 1)}>{t.queuePrevious}</button>
+          <span>{visiblePage + 1} / {pageCount}</span>
+          <button type="button" disabled={visiblePage + 1 === pageCount} onClick={() => setQueuePage(visiblePage + 1)}>{t.queueNext}</button>
+        </nav>
+      )}
+      <BatchHistory
+        entries={history.entries}
+        enabled={history.enabled}
+        storageError={history.storageError}
+        isProcessing={isProcessing}
+        t={t}
+        language={language}
+        onEnabledChange={history.setEnabled}
+        onApply={(entry) => {
+          setPublishingPreset("custom");
+          setSavedPresetId(undefined);
+          setSettings(normalizedSettings({ ...entry.settings }));
+        }}
+        onRemove={history.removeEntry}
+        onClear={history.clear}
+      />
+      {comparisonJob?.result ? (
+        <ImageComparison
+          job={comparisonJob}
+          error={comparisonError}
+          onClose={() => {
+            setComparisonJobId(undefined);
+            setComparisonError(undefined);
+          }}
+          labels={{
+            title: t.comparisonTitle,
+            before: t.before,
+            after: t.after,
+            close: t.closeComparison,
+            loading: t.loadingPreview
+          }}
+        />
+      ) : null}
     </main>
   );
 }

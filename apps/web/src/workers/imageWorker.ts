@@ -101,6 +101,30 @@ function hasPixelTransform(
   );
 }
 
+async function createPreview(source: ImageBitmap): Promise<Blob> {
+  const maxDimension = 640;
+  const scale = Math.min(1, maxDimension / Math.max(source.width, source.height));
+  const width = Math.max(1, Math.round(source.width * scale));
+  const height = Math.max(1, Math.round(source.height * scale));
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext("2d", { alpha: true });
+  if (!context) {
+    throw new Error("Preview canvas context is unavailable.");
+  }
+
+  context.drawImage(source, 0, 0, width, height);
+  return canvas.convertToBlob({ type: "image/webp", quality: 0.82 });
+}
+
+async function createBlobPreview(blob: Blob): Promise<Blob> {
+  const bitmap = await createImageBitmap(blob);
+  try {
+    return await createPreview(bitmap);
+  } finally {
+    bitmap.close();
+  }
+}
+
 function outcomeFor(inputType: string, outputType: string, transformed: boolean, keptOriginal: boolean) {
   if (keptOriginal) {
     return "kept-original";
@@ -117,8 +141,10 @@ function outcomeFor(inputType: string, outputType: string, transformed: boolean,
   return "compressed";
 }
 
-async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
+async function processImage(request: Extract<WorkerRequest, { type: "process" }>): Promise<WorkerResponse> {
   const startedAt = performance.now();
+  let bitmap: ImageBitmap | undefined;
+  let canvas: OffscreenCanvas | undefined;
 
   try {
     const type = outputType(request.file.type, request.settings);
@@ -127,10 +153,10 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
       throw new Error("Lossless mode currently supports PNG inputs only.");
     }
 
-    const bitmap = await createImageBitmap(request.file);
+    bitmap = await createImageBitmap(request.file);
     const source = { width: bitmap.width, height: bitmap.height };
     const plan = createResizeCropPlan(source, request.settings);
-    const canvas = new OffscreenCanvas(plan.output.width, plan.output.height);
+    canvas = new OffscreenCanvas(plan.output.width, plan.output.height);
     const context = canvas.getContext("2d", { alpha: true });
 
     if (!context) {
@@ -147,6 +173,7 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
     const box = plan.crop;
     context.drawImage(bitmap, box.sx, box.sy, box.sw, box.sh, box.dx, box.dy, box.dw, box.dh);
     bitmap.close();
+    bitmap = undefined;
 
     const encoded = await encodeWithOptionalTarget(canvas, type, request.file.type, request.settings);
     const encodedBlob = encoded.blob;
@@ -173,6 +200,7 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
         height: plan.output.height,
         size: blob.size,
         durationMs: Math.round(performance.now() - startedAt),
+        archivePath: request.archivePath,
         qualityUsed: encoded.quality,
         encodeAttempts: encoded.attempts,
         targetReached: request.settings.targetSizeKb > 0
@@ -187,14 +215,34 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
       jobId: request.jobId,
       error: error instanceof Error ? error.message : "Image processing failed."
     };
+  } finally {
+    bitmap?.close();
+    if (canvas) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+  }
+}
+
+async function createComparisonPreviews(request: Extract<WorkerRequest, { type: "preview" }>): Promise<WorkerResponse> {
+  try {
+    const [sourcePreview, outputPreview] = await Promise.all([
+      createBlobPreview(request.file),
+      createBlobPreview(request.outputBlob)
+    ]);
+    return { type: "preview", jobId: request.jobId, sourcePreview, outputPreview };
+  } catch (error) {
+    return {
+      type: "preview-failed",
+      jobId: request.jobId,
+      error: error instanceof Error ? error.message : "Preview generation failed."
+    };
   }
 }
 
 self.addEventListener("message", async (event: MessageEvent<WorkerRequest>) => {
-  if (event.data.type !== "process") {
-    return;
-  }
-
-  const response = await processImage(event.data);
+  const response = event.data.type === "process"
+    ? await processImage(event.data)
+    : await createComparisonPreviews(event.data);
   self.postMessage(response);
 });

@@ -9,7 +9,7 @@ export async function zipCompletedJobs(jobs: ImageJob[]): Promise<Blob> {
       continue;
     }
 
-    entries[job.result.name] = new Uint8Array(await job.result.blob.arrayBuffer());
+    entries[job.result.archivePath] = new Uint8Array(await job.result.blob.arrayBuffer());
   }
 
   return new Blob([zipSync(entries)], { type: "application/zip" });

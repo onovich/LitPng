@@ -10,6 +10,7 @@ export type ImageSettings = {
   outputFormat: OutputFormat;
   quality: number;
   targetSizeKb: number;
+  preserveFolders: boolean;
   renamePattern: string;
   prefix: string;
   suffix: string;
@@ -34,6 +35,7 @@ export type ImageJob = {
   id: string;
   file: File;
   sourceName: string;
+  sourceRelativePath?: string;
   outputName: string;
   sourceSize: number;
   sourceType: string;
@@ -53,19 +55,30 @@ export type ProcessedImage = {
   height: number;
   size: number;
   durationMs: number;
+  archivePath: string;
+  sourcePreview?: Blob;
+  outputPreview?: Blob;
   qualityUsed: number;
   encodeAttempts: number;
   targetReached?: boolean;
   outcome: "compressed" | "kept-original" | "converted" | "transformed";
 };
 
-export type WorkerRequest = {
-  type: "process";
-  jobId: string;
-  file: File;
-  outputName: string;
-  settings: ImageSettings;
-};
+export type WorkerRequest =
+  | {
+      type: "process";
+      jobId: string;
+      file: File;
+      outputName: string;
+      archivePath: string;
+      settings: ImageSettings;
+    }
+  | {
+      type: "preview";
+      jobId: string;
+      file: File;
+      outputBlob: Blob;
+    };
 
 export type WorkerResponse =
   | {
@@ -77,6 +90,17 @@ export type WorkerResponse =
       type: "failed";
       jobId: string;
       error: string;
+    }
+  | {
+      type: "preview";
+      jobId: string;
+      sourcePreview: Blob;
+      outputPreview: Blob;
+    }
+  | {
+      type: "preview-failed";
+      jobId: string;
+      error: string;
     };
 
 export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
@@ -85,6 +109,7 @@ export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
     outputFormat: "original",
     quality: 0.82,
     targetSizeKb: 0,
+    preserveFolders: false,
     renamePattern: "{original}",
     prefix: "",
     suffix: "-little",

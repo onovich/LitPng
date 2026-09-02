@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCropBox, fitWithin } from "./geometry";
+import { createCropBox, createResizeCropPlan, fitWithin } from "./geometry";
 
 describe("fitWithin", () => {
   it("keeps smaller images at original size", () => {
@@ -32,5 +32,36 @@ describe("createCropBox", () => {
       sw: 800,
       sh: 800
     });
+  });
+});
+
+describe("createResizeCropPlan", () => {
+  it("creates the requested aspect and dimensions for crop mode", () => {
+    const plan = createResizeCropPlan(
+      { width: 1600, height: 1200 },
+      { maxWidth: 1200, maxHeight: 630, cropMode: "crop", cropAnchor: "center" }
+    );
+
+    expect(plan.output).toEqual({ width: 1200, height: 630 });
+    expect(plan.crop).toMatchObject({ sx: 0, sy: 180, sw: 1600, sh: 840, dw: 1200, dh: 630 });
+  });
+
+  it("keeps the crop aspect without upscaling a small source", () => {
+    const plan = createResizeCropPlan(
+      { width: 512, height: 512 },
+      { maxWidth: 1200, maxHeight: 630, cropMode: "crop", cropAnchor: "center" }
+    );
+
+    expect(plan.output).toEqual({ width: 512, height: 269 });
+    expect(plan.crop.dw / plan.crop.dh).toBeCloseTo(1200 / 630, 2);
+  });
+
+  it("keeps fit mode aspect-preserving", () => {
+    const plan = createResizeCropPlan(
+      { width: 1600, height: 1200 },
+      { maxWidth: 1200, maxHeight: 630, cropMode: "fit", cropAnchor: "center" }
+    );
+
+    expect(plan.output).toEqual({ width: 840, height: 630 });
   });
 });

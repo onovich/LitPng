@@ -107,6 +107,30 @@ Use the root `ManualSmoke.cmd` for a double-clickable smoke entry.
   as the maximum, choose the highest tested quality under the byte budget, and
   return the smallest valid attempt with an explicit warning if the target is
   unreachable.
+- CSV exports must escape delimiters and neutralize formula-leading filenames;
+  user-controlled names should never become executable spreadsheet formulas.
+- platform presets should cite upstream guidance, distinguish protocol requirements from ecosystem conventions, and map to tested output geometry rather than labels alone;
+- browser-persisted settings must validate every field on read, tolerate malformed JSON and storage failures, cap collection growth, and never trust local storage as typed application state;
+- Local batch history should be opt-in and retain only explicitly selected
+  summary fields and a settings snapshot. Record terminal Worker responses for
+  the current run, not an asynchronously updated React queue. Invalidate pending
+  recording tokens on disable/clear so in-flight work cannot undo privacy actions.
+- Compute historical input/output totals from successful pairs only; failed
+  files must not appear as bytes saved. Restoring settings is not restoring files.
+- A bounded processing queue is not enough if import metadata still decodes all
+  images in parallel. Bound both paths, page the rendered rows, and provide an
+  explicit way to release retained results. A single shared Worker must not be
+  reported as multiple workers. Pause/stop semantics must specify whether the
+  current image finishes, and worker errors/timeouts must settle pending jobs.
+- Every naming token exposed in the UI must be implemented in the pure filename
+  helper. Unknown tokens should be removed safely instead of leaking braces or
+  placeholder text into exported filenames.
+- Folder-preserving ZIP export must sanitize every directory segment, discard
+  traversal markers, and deduplicate filenames per directory rather than across
+  the whole batch.
+- Comparison previews must decode the final encoded blob, not reuse the
+  pre-encode canvas. Generate bounded thumbnails in the worker and revoke UI
+  object URLs when the dialog closes.
 
 ## Commit Checklist
 

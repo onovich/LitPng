@@ -62,18 +62,47 @@ export function extensionFor(file: File, outputFormat: OutputFormat): string {
   return "img";
 }
 
-export function outputNameFor(file: File, index: number, settings: ImageSettings): string {
+type OutputNameContext = {
+  relativePath?: string;
+};
+
+function folderFor(file: File, relativePath?: string): string {
+  const path = relativePath || file.webkitRelativePath || file.name;
+  const parts = path.split(/[\\/]+/).filter(Boolean);
+  return parts.length > 1 ? parts.at(-2)! : "root";
+}
+
+function dateFor(file: File): string {
+  const date = new Date(file.lastModified);
+  if (Number.isNaN(date.getTime())) {
+    return "undated";
+  }
+
+  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+}
+
+export function outputNameFor(
+  file: File,
+  index: number,
+  settings: ImageSettings,
+  context: OutputNameContext = {}
+): string {
   const { stem } = splitName(file.name);
   const original = cleanStem(stem, settings);
   const prefix = cleanStem(settings.prefix || "image", settings);
   const suffix = settings.suffix ? cleanStem(settings.suffix, settings) : "";
   const serial = String(index + 1).padStart(3, "0");
+  const folder = cleanStem(folderFor(file, context.relativePath), settings);
+  const date = dateFor(file);
 
   let name = settings.renamePattern
     .replaceAll("{original}", original)
     .replaceAll("{prefix}", prefix)
     .replaceAll("{suffix}", suffix)
-    .replaceAll("{index}", serial);
+    .replaceAll("{index}", serial)
+    .replaceAll("{folder}", folder)
+    .replaceAll("{date}", date)
+    .replace(/\{[^}]+\}/g, "");
 
   if (!settings.renamePattern.includes("{suffix}") && suffix) {
     name = `${name}-${suffix}`;
@@ -83,20 +112,62 @@ export function outputNameFor(file: File, index: number, settings: ImageSettings
   return `${name}.${extensionFor(file, settings.outputFormat)}`;
 }
 
-export function uniqueNames(names: string[]): string[] {
-  const seen = new Map<string, number>();
+function deduplicateNames(names: string[], scopes: string[]): string[] {
+  const used = new Set<string>();
 
-  return names.map((name) => {
-    const count = seen.get(name) ?? 0;
-    seen.set(name, count + 1);
+  return names.map((name, index) => {
+    const scope = scopes[index] ?? "";
+    const { stem, extension } = splitName(name);
+    let candidate = name;
+    let serial = 2;
+    let key = `${scope}\u0000${candidate}`.toLocaleLowerCase();
 
-    if (count === 0) {
-      return name;
+    while (used.has(key)) {
+      candidate = `${stem}-${serial}.${extension}`;
+      serial += 1;
+      key = `${scope}\u0000${candidate}`.toLocaleLowerCase();
     }
 
-    const { stem, extension } = splitName(name);
-    return `${stem}-${count + 1}.${extension}`;
+    used.add(key);
+    return candidate;
   });
+}
+
+export function uniqueNames(names: string[]): string[] {
+  return deduplicateNames(names, names.map(() => ""));
+}
+
+function safeDirectory(relativePath?: string): string {
+  if (!relativePath) {
+    return "";
+  }
+
+  return relativePath
+    .split(/[\\/]+/)
+    .slice(0, -1)
+    .filter((segment) => segment !== "" && segment !== "." && segment !== "..")
+    .map((segment) => segment
+      .replace(/[<>:"|?*\u0000-\u001f]/g, "-")
+      .replace(/[. ]+$/g, "")
+      .trim() || "folder")
+    .join("/");
+}
+
+export function archivePathFor(relativePath: string | undefined, outputName: string, preserveFolders: boolean): string {
+  const directory = preserveFolders ? safeDirectory(relativePath) : "";
+  return directory ? `${directory}/${outputName}` : outputName;
+}
+
+export function uniqueNamesByDirectory(
+  names: string[],
+  relativePaths: Array<string | undefined>,
+  preserveFolders: boolean
+): string[] {
+  if (!preserveFolders) {
+    return uniqueNames(names);
+  }
+
+  return deduplicateNames(names, relativePaths.map(safeDirectory));
 }
 
 export function formatBytes(value: number): string {

@@ -114,7 +114,7 @@ async function runCase(page: Page, benchmark: BenchmarkCase): Promise<BenchmarkR
   await quality.fill(String(benchmark.quality / 100));
   await expect(quality).toHaveValue(String(benchmark.quality / 100));
 
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.getByLabel("Add images").setInputFiles({
     name: `${benchmark.name}.${benchmark.mimeType === "image/png" ? "png" : "jpg"}`,
     mimeType: benchmark.mimeType,
     buffer: benchmark.input

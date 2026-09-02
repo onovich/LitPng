@@ -10,10 +10,18 @@
 
 - 全部处理在浏览器本地完成。
 - 批量完成图片转换、改名和导出。
+- 支持原名、序号、前后缀、文件夹和日期变量的自定义命名模板。
+- 可在 ZIP 导出中保留导入时的文件夹层级。
 - 有损 PNG 使用 Rust `imagequant` WASM，输出带调色板透明度的索引 PNG。
 - 无损 PNG 使用 `@jsquash/png`，JPEG 使用 `@jsquash/jpeg` 中的 MozJPEG。
 - 包含最低质量、无损回退和不增大文件的原图保留策略。
 - 支持通过有界质量搜索设置单图目标体积。
+- 支持为已完成批次下载 CSV 压缩报告。
+- 支持基于实际编码结果、可键盘操作的处理前后对比预览。
+- 支持一键应用 Shopify、WordPress 和 Open Graph 发布预设。
+- 支持在当前浏览器中保存、覆盖、应用和删除自定义预设。
+- 可选择记录本地批次历史、查看统计并复用参数，不持久保存图片文件。
+- 队列支持串行解码、暂停/继续/停止、50 条分页及清理已完成项。
 
 ## 快速开始
 
@@ -58,6 +66,9 @@ npm run codec:build-wasm
 - [`docs/phase0-architecture.md`](docs/phase0-architecture.md)
 - [`docs/pngquant-library-decision.md`](docs/pngquant-library-decision.md)
 - [`docs/licensing-release-gate.md`](docs/licensing-release-gate.md)
+- [`docs/publishing-presets.md`](docs/publishing-presets.md)
+- [`docs/batch-history.md`](docs/batch-history.md)
+- [`docs/large-queue.md`](docs/large-queue.md)
 - [`docs/project-lessons.md`](docs/project-lessons.md)
 
 ## 当前状态

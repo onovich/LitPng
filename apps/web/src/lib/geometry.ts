@@ -92,9 +92,22 @@ export function createCropBox(
 }
 
 export function createResizeCropPlan(source: ImageSize, settings: ResizeCropSettings): ResizeCropPlan {
-  const output = fitWithin(source, settings.maxWidth, settings.maxHeight);
+  const hasFixedCropTarget =
+    settings.cropMode !== "fit" && settings.maxWidth > 0 && settings.maxHeight > 0;
+  const output = hasFixedCropTarget
+    ? cropTargetWithoutUpscaling(source, settings.maxWidth, settings.maxHeight)
+    : fitWithin(source, settings.maxWidth, settings.maxHeight);
   return {
     output,
     crop: createCropBox(source, output, settings.cropMode, settings.cropAnchor)
+  };
+}
+
+function cropTargetWithoutUpscaling(source: ImageSize, targetWidth: number, targetHeight: number): ImageSize {
+  const scale = Math.min(1, source.width / targetWidth, source.height / targetHeight);
+
+  return {
+    width: Math.max(1, Math.round(targetWidth * scale)),
+    height: Math.max(1, Math.round(targetHeight * scale))
   };
 }
