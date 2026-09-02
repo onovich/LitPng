@@ -579,6 +579,11 @@ Desktop Pro 任务：
 
 ### 7.4 性能测试
 
+当前已建立可重复的 Chromium 合成基线，覆盖透明 UI、渐变和照片型素材，
+并记录体积、耗时、PSNR 与 codec/fallback 选择。运行
+`npm run benchmark:codecs`，基线见 `docs/codec-benchmark-baseline.md`。
+真实授权素材、移动端和 20–50MB 大图仍属于上线前验证项。
+
 场景：
 
 - 10 张图。

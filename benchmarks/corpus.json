@@ -1,0 +1,22 @@
+{
+  "images": [
+    {
+      "id": "fronalpstock-photo",
+      "fileName": "Fronalpstock_big.jpg",
+      "mimeType": "image/jpeg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Fronalpstock_big.jpg",
+      "license": "CC BY-SA 3.0; Hannes Röst; via Wikimedia Commons",
+      "sha1": "61ff2c892bfb5e9e093ad5d119d9466604a88b6a"
+    },
+    {
+      "id": "free-software-ui",
+      "fileName": "Free_software_screenshot.png",
+      "mimeType": "image/png",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/8/87/Free_software_screenshot.png",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Free_software_screenshot.png",
+      "license": "CC0 1.0; George Balatsos; via Wikimedia Commons",
+      "sha1": "9bc6d1b05588fccca9ba3e8a11cc98ca5c2c78a7"
+    }
+  ]
+}

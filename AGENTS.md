@@ -6,7 +6,7 @@
 
 Initialization status: initialized
 Initialized at: 2026-05-31 12:59:05 +08:00
-Project root: D:\LabProjects\LitPng
+Project root: /Users/onovich/WebProjects/LitPng
 Initial git remote: git@github.com:onovich/LitPng.git
 
 Use these workflow skills for routine Codex work in this project:
@@ -15,18 +15,14 @@ Use these workflow skills for routine Codex work in this project:
 - `project-git-workflow` / `git-flow`: use for git status, validation, commit, push, stash, ignore, and guarded discard operations.
 - `project-ops-workflow` / `ops-flow`: use for environment checks, dependencies, build, test, lint, format, typecheck, dev server, smoke, package, and release dry-run operations.
 
-Prefer the configured wrappers instead of guessing project commands:
+Prefer the configured project commands instead of guessing project commands:
 
-```
-powershell
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Status.cmd
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\CommitAndPush.cmd -Message "commit message" -Paths path\to\file,other\file
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Stash.cmd -StashMessage "reason"
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\DiscardPaths.cmd -ConfirmDangerous -Paths path\to\file
-C:\Users\Administrator\.codex\skills\project-ops-workflow\scripts\ops\Validate.cmd
-C:\Users\Administrator\.codex\skills\project-ops-workflow\scripts\ops\StartDevServer.cmd
-C:\Users\Administrator\.codex\skills\project-ops-workflow\scripts\ops\Smoke.cmd
-C:\Users\Administrator\.codex\skills\project-ops-workflow\scripts\ops\StopDevServer.cmd
+```sh
+git status --short --branch
+npm run validate
+npm run test:e2e
+npm run dev
+npm run codec:build-wasm
 ```
 
 Project-specific workflow configs live at:
@@ -45,4 +41,3 @@ For manual browser smoke, double-click:
 - `ManualSmoke.cmd`
 
 <!-- /codex-init-flow -->
-

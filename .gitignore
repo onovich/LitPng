@@ -9,3 +9,7 @@ npm-debug.log*
 
 .tmp-*/
 *.tar.xz
+.tmp-playwright-results/
+.tmp-benchmarks/
+.tmp-benchmark-corpus/
+playwright-report/

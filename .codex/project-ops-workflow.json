@@ -1,98 +1,66 @@
-﻿{
-    "schemaVersion":  1,
-    "initializedMarker":  "codex-project-ops-workflow: initialized",
-    "initializedAt":  "2026-05-31 12:59:06 +08:00",
-    "projectName":  "LitPng",
-    "repoRoot":  "D:/LabProjects/LitPng",
-    "validateSequence":  [
-                             "lint",
-                             "typecheck",
-                             "build",
-                             "test",
-                             "structureCheck",
-                             "docsCheck"
-                         ],
-    "operations":  {
-                       "envCheck":  {
-                                        "commands":  [
-
-                                                     ]
-                                    },
-                       "restoreDeps":  {
-                                           "commands":  [
-
-                                                        ]
-                                       },
-                       "installDeps":  {
-                                           "commands":  [
-
-                                                        ]
-                                       },
-                       "build":  {
-                                     "commands":  [
-
-                                                  ]
-                                 },
-                       "test":  {
-                                    "commands":  [
-
-                                                 ]
-                                },
-                       "lint":  {
-                                    "commands":  [
-
-                                                 ]
-                                },
-                       "format":  {
-                                      "commands":  [
-
-                                                   ]
-                                  },
-                       "typecheck":  {
-                                         "commands":  [
-
-                                                      ]
-                                     },
-                       "structureCheck":  {
-                                              "commands":  [
-
-                                                           ]
-                                          },
-                       "codegen":  {
-                                       "commands":  [
-
-                                                    ]
-                                   },
-                       "docsCheck":  {
-                                         "commands":  [
-
-                                                      ]
-                                     },
-                       "smoke":  {
-                                     "urls":  [
-
-                                              ],
-                                     "commands":  [
-
-                                                  ]
-                                 },
-                       "package":  {
-                                       "commands":  [
-
-                                                    ]
-                                   },
-                       "releaseDryRun":  {
-                                             "commands":  [
-
-                                                          ]
-                                         }
-                   },
-    "devServer":  {
-                      "startCommand":  "",
-                      "healthUrl":  "",
-                      "readyText":  "",
-                      "startupTimeoutSeconds":  30,
-                      "pidFile":  ".codex/project-ops-devserver.pid"
-                  },
-    "forbiddenPolicy":  "Do not run destructive clean/reset/deploy commands unless the user explicitly asks."
+{
+  "schemaVersion": 1,
+  "initializedMarker": "codex-project-ops-workflow: initialized",
+  "initializedAt": "2026-09-03 00:00:00 +08:00",
+  "projectName": "LitPng",
+  "repoRoot": "/Users/onovich/WebProjects/LitPng",
+  "validateSequence": ["test", "typecheck", "build", "codecTest", "smoke"],
+  "operations": {
+    "envCheck": {
+      "commands": ["node --version", "npm --version", "cargo --version"]
+    },
+    "restoreDeps": {
+      "commands": ["npm ci"]
+    },
+    "installDeps": {
+      "commands": ["npm install"]
+    },
+    "build": {
+      "commands": ["npm run build"]
+    },
+    "test": {
+      "commands": ["npm run test", "npm run codec:test"]
+    },
+    "lint": {
+      "commands": []
+    },
+    "format": {
+      "commands": ["cargo fmt --manifest-path packages/pngquant-wasm/Cargo.toml -- --check"]
+    },
+    "typecheck": {
+      "commands": ["npm run typecheck"]
+    },
+    "structureCheck": {
+      "commands": ["git diff --check"]
+    },
+    "codegen": {
+      "commands": ["npm run codec:build-wasm"]
+    },
+    "docsCheck": {
+      "commands": []
+    },
+    "smoke": {
+      "urls": ["http://127.0.0.1:4321/", "http://127.0.0.1:4321/png-compressor/"],
+      "commands": ["npm run test:e2e"]
+    },
+    "package": {
+      "commands": ["npm run build"]
+    },
+    "releaseDryRun": {
+      "commands": [
+        "npm run validate",
+        "npm run test:e2e",
+        "npm run audit:prod",
+        "npm run release:license-check"
+      ]
+    }
+  },
+  "devServer": {
+    "startCommand": "npm run dev",
+    "healthUrl": "http://127.0.0.1:4321/",
+    "readyText": "LittlePNG",
+    "startupTimeoutSeconds": 30,
+    "pidFile": ".codex/project-ops-devserver.pid"
+  },
+  "forbiddenPolicy": "Do not run destructive clean/reset/deploy commands unless the user explicitly asks."
 }

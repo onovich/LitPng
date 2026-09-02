@@ -3,25 +3,38 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=9.6.5"
+  },
   "workspaces": [
     "apps/web"
   ],
   "scripts": {
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "benchmark:codecs": "npm run build && playwright test --config playwright.benchmark.config.ts",
+    "benchmark:fetch-corpus": "node scripts/fetch-benchmark-corpus.mjs",
     "dev": "npm --workspace @littlepng/web run dev",
     "build": "npm --workspace @littlepng/web run build",
     "preview": "npm --workspace @littlepng/web run preview",
+    "preview:test": "npm --workspace @littlepng/web run preview:test",
+    "release:license-check": "node scripts/check-release-license.mjs",
     "test": "npm --workspace @littlepng/web run test",
+    "test:e2e": "npm run build && playwright test",
+    "test:release-license": "node --test scripts/check-release-license.test.mjs",
     "typecheck": "npm --workspace @littlepng/web run typecheck",
+    "validate": "npm run test && npm run test:release-license && npm run typecheck && npm run build && npm run codec:test",
     "codec:fetch": "cargo fetch --manifest-path packages/pngquant-wasm/Cargo.toml",
     "codec:check": "cargo check --manifest-path packages/pngquant-wasm/Cargo.toml",
     "codec:test": "cargo test --manifest-path packages/pngquant-wasm/Cargo.toml",
-    "codec:build-wasm": "wasm-pack build packages/pngquant-wasm --target web --release --out-dir ../../apps/web/src/codecs/pngquant-wasm"
+    "codec:build-wasm": "wasm-pack build packages/pngquant-wasm --target web --release --out-dir ../../apps/web/src/codecs/pngquant-wasm && node scripts/normalize-wasm-package.mjs"
   },
   "overrides": {
-    "css-tree": "3.1.0",
-    "prismjs": "1.29.0"
+    "prismjs": "1.30.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "svgo": "^4.0.2",
     "vitest": "^4.1.7"
   },
   "dependencies": {

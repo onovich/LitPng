@@ -1,17 +1,20 @@
-﻿{
-    "schemaVersion":  1,
-    "initializedMarker":  "codex-project-git-workflow: initialized",
-    "initializedAt":  "2026-05-31 12:59:05 +08:00",
-    "projectName":  "LitPng",
-    "repoRoot":  "D:/LabProjects/LitPng",
-    "safeDirectory":  "D:/LabProjects/LitPng",
-    "statusCommand":  "git -c safe.directory=D:/LabProjects/LitPng status --short --branch",
-    "validationCommands":  [
-
-                           ],
-    "stagingPolicy":  "ask each time",
-    "commitCommand":  "",
-    "pushCommand":  "git -c safe.directory=D:/LabProjects/LitPng push -u origin HEAD",
-    "docsRequirement":  "",
-    "forbiddenCommands":  ""
+{
+  "schemaVersion": 1,
+  "initializedMarker": "codex-project-git-workflow: initialized",
+  "initializedAt": "2026-09-03 00:00:00 +08:00",
+  "projectName": "LitPng",
+  "repoRoot": "/Users/onovich/WebProjects/LitPng",
+  "safeDirectory": "/Users/onovich/WebProjects/LitPng",
+  "statusCommand": "git status --short --branch",
+  "validationCommands": [
+    "npm run validate",
+    "npm run test:e2e",
+    "npm run audit:prod",
+    "cargo fmt --manifest-path packages/pngquant-wasm/Cargo.toml -- --check"
+  ],
+  "stagingPolicy": "ask each time",
+  "commitCommand": "git commit",
+  "pushCommand": "git push -u origin HEAD",
+  "docsRequirement": "Keep README current when codec behavior or validation commands change.",
+  "forbiddenCommands": "Never force-push or discard user changes without explicit approval."
 }

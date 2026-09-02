@@ -91,6 +91,19 @@ Manual smoke should verify both:
 
 Use the root `ManualSmoke.cmd` for a double-clickable smoke entry.
 
+## Browser Validation Lessons
+
+- A build-only check does not prove that generated WASM loads inside a worker.
+  Playwright smoke tests should upload generated fixtures, run the real queue,
+  download the result, and inspect the output bytes.
+- The transparent PNG smoke must assert indexed PNG color type and a `tRNS`
+  chunk; a generic PNG signature alone would not prove the imagequant path ran.
+- Astro 7 `astro preview` manages a background process and exits after startup,
+  which is incompatible with Playwright's foreground `webServer` lifecycle.
+  Use the dedicated `vite preview` test command instead.
+- Keep production dependency auditing in CI. When upgrading Astro, remove stale
+  transitive overrides that can force incompatible CSS parser versions.
+
 ## Commit Checklist
 
 Before pushing product or codec changes, run:

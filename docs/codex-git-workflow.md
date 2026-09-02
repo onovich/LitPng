@@ -5,43 +5,21 @@
 
 Initialization status: initialized
 Project: LitPng
-Repository root: D:/LabProjects/LitPng
-Machine config: `
-.codex\project-git-workflow.json
-`
+Repository root: `/Users/onovich/WebProjects/LitPng`
+Machine config: `.codex/project-git-workflow.json`
 Skill: project-git-workflow
 
 Treat this document and the machine config as the source of truth for this repository's Codex git workflow. Do not replace them with generic defaults unless the user explicitly asks to reinitialize or update the policy.
 
-## Global Wrappers
-
-Run these from the repository root:
-
-```
-powershell
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Status.cmd
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Validate.cmd
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Commit.cmd -Message "commit message" -Paths path\to\file,other\file
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\CommitAndPush.cmd -Message "commit message" -Paths path\to\file,other\file
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Push.cmd
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Stash.cmd -StashMessage "reason"
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\StashPop.cmd
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\Ignore.cmd -Pattern build-output/
-C:\Users\Administrator\.codex\skills\project-git-workflow\scripts\git\DiscardPaths.cmd -ConfirmDangerous -Paths path\to\file
-```
-
 ## Status
 
-```
-powershell
-git -c safe.directory=D:/LabProjects/LitPng status --short --branch
-```
+`git status --short --branch`
 
 ## Validation
 
 Run these before commit or push, in order:
 
-No validation commands were configured. Ask before committing or pushing if validation matters for this repo.
+Run `npm run validate`, `npm run test:e2e`, `npm run audit:prod`, and `cargo fmt --manifest-path packages/pngquant-wasm/Cargo.toml -- --check` before commit or push.
 ## Staging Policy
 
 ask each time
@@ -54,10 +32,7 @@ Use the global wrapper's built-in git commit after staging according to policy. 
 
 ## Push
 
-```
-powershell
-git -c safe.directory=D:/LabProjects/LitPng push -u origin HEAD
-```
+`git push -u origin HEAD`
 
 ## Docs And TODO
 
