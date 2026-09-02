@@ -13,6 +13,7 @@
 - 有损 PNG 使用 Rust `imagequant` WASM，输出带调色板透明度的索引 PNG。
 - 无损 PNG 使用 `@jsquash/png`，JPEG 使用 `@jsquash/jpeg` 中的 MozJPEG。
 - 包含最低质量、无损回退和不增大文件的原图保留策略。
+- 支持通过有界质量搜索设置单图目标体积。
 
 ## 快速开始
 

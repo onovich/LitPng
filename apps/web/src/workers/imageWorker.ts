@@ -2,6 +2,7 @@ import type { ImageSettings, WorkerRequest, WorkerResponse } from "../lib/types"
 import { jpegEncodingOptions, pngQuantizationOptions } from "../lib/codecPolicy";
 import { createResizeCropPlan } from "../lib/geometry";
 import { shouldKeepOriginal } from "../lib/processingPolicy";
+import { encodeToTargetSize } from "../lib/targetSize";
 import { encodeQuantizedPng } from "../codecs/pngquant";
 
 function outputType(inputType: string, settings: ImageSettings): string {
@@ -55,6 +56,29 @@ async function encodeCanvas(
   }
 
   return canvas.convertToBlob({ type, quality: settings.quality });
+}
+
+async function encodeWithOptionalTarget(
+  canvas: OffscreenCanvas,
+  type: string,
+  inputType: string,
+  settings: ImageSettings
+): Promise<{ blob: Blob; quality: number; attempts: number }> {
+  if (settings.compressionMode !== "lossy" || settings.targetSizeKb <= 0) {
+    return { blob: await encodeCanvas(canvas, type, inputType, settings), quality: settings.quality, attempts: 1 };
+  }
+
+  const result = await encodeToTargetSize(
+    (quality) => encodeCanvas(canvas, type, inputType, { ...settings, quality }),
+    {
+      targetBytes: settings.targetSizeKb * 1024,
+      maxQuality: settings.quality,
+      minQuality: 0.35,
+      maxAttempts: 6
+    }
+  );
+
+  return { blob: result.blob, quality: result.quality, attempts: result.attempts };
 }
 
 function hasPixelTransform(
@@ -124,7 +148,8 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
     context.drawImage(bitmap, box.sx, box.sy, box.sw, box.sh, box.dx, box.dy, box.dw, box.dh);
     bitmap.close();
 
-    const encodedBlob = await encodeCanvas(canvas, type, request.file.type, request.settings);
+    const encoded = await encodeWithOptionalTarget(canvas, type, request.file.type, request.settings);
+    const encodedBlob = encoded.blob;
     const transformed = hasPixelTransform(source, plan);
     const keptOriginal = shouldKeepOriginal({
       sourceSize: request.file.size,
@@ -148,6 +173,11 @@ async function processImage(request: WorkerRequest): Promise<WorkerResponse> {
         height: plan.output.height,
         size: blob.size,
         durationMs: Math.round(performance.now() - startedAt),
+        qualityUsed: encoded.quality,
+        encodeAttempts: encoded.attempts,
+        targetReached: request.settings.targetSizeKb > 0
+          ? blob.size <= request.settings.targetSizeKb * 1024
+          : undefined,
         outcome: outcomeFor(request.file.type, type, transformed, keptOriginal)
       }
     };

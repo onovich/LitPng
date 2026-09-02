@@ -41,6 +41,7 @@ export type Translation = {
   lossy: string;
   format: string;
   quality: string;
+  targetSize: string;
   estimatedLoss: string;
   none: string;
   low: string;
@@ -58,6 +59,7 @@ export type Translation = {
   downloadImage: string;
   kept: string;
   keptOriginal: string;
+  targetNotReached: string;
   queued: string;
   failed: string;
   cancelled: string;
@@ -97,6 +99,7 @@ export const translations: Record<LanguageCode, Translation> = {
     lossy: "Lossy",
     format: "Format",
     quality: "Quality",
+    targetSize: "Target size (KB)",
     estimatedLoss: "Estimated loss",
     none: "None",
     low: "Low",
@@ -114,6 +117,7 @@ export const translations: Record<LanguageCode, Translation> = {
     downloadImage: "Download image",
     kept: "kept",
     keptOriginal: "Kept original",
+    targetNotReached: "Closest result; target not reached",
     queued: "queued",
     failed: "failed",
     cancelled: "cancelled",
@@ -162,6 +166,7 @@ export const translations: Record<LanguageCode, Translation> = {
     lossy: "有损",
     format: "格式",
     quality: "质量",
+    targetSize: "目标大小 (KB)",
     estimatedLoss: "预计损失",
     none: "无",
     low: "低",
@@ -179,6 +184,7 @@ export const translations: Record<LanguageCode, Translation> = {
     downloadImage: "下载图片",
     kept: "已保留",
     keptOriginal: "保留原图",
+    targetNotReached: "已输出最接近结果，未达到目标大小",
     queued: "等待中",
     failed: "失败",
     cancelled: "已取消",
@@ -227,6 +233,7 @@ export const translations: Record<LanguageCode, Translation> = {
     lossy: "С потерями",
     format: "Формат",
     quality: "Качество",
+    targetSize: "Целевой размер (КБ)",
     estimatedLoss: "Оценка потерь",
     none: "Нет",
     low: "Низкая",
@@ -244,6 +251,7 @@ export const translations: Record<LanguageCode, Translation> = {
     downloadImage: "Скачать изображение",
     kept: "сохранено",
     keptOriginal: "Оригинал сохранен",
+    targetNotReached: "Ближайший результат; цель не достигнута",
     queued: "в очереди",
     failed: "ошибка",
     cancelled: "отменено",
@@ -292,6 +300,7 @@ export const translations: Record<LanguageCode, Translation> = {
     lossy: "非可逆",
     format: "形式",
     quality: "品質",
+    targetSize: "目標サイズ (KB)",
     estimatedLoss: "推定劣化",
     none: "なし",
     low: "低",
@@ -309,6 +318,7 @@ export const translations: Record<LanguageCode, Translation> = {
     downloadImage: "画像をダウンロード",
     kept: "保持",
     keptOriginal: "元画像を保持",
+    targetNotReached: "最も近い結果です。目標サイズには未達です",
     queued: "待機中",
     failed: "失敗",
     cancelled: "キャンセル",
@@ -357,6 +367,7 @@ export const translations: Record<LanguageCode, Translation> = {
     lossy: "Con perdida",
     format: "Formato",
     quality: "Calidad",
+    targetSize: "Tamaño objetivo (KB)",
     estimatedLoss: "Perdida estimada",
     none: "Ninguna",
     low: "Baja",
@@ -374,6 +385,7 @@ export const translations: Record<LanguageCode, Translation> = {
     downloadImage: "Descargar imagen",
     kept: "conservado",
     keptOriginal: "Original conservado",
+    targetNotReached: "Resultado más cercano; no se alcanzó el objetivo",
     queued: "en cola",
     failed: "fallo",
     cancelled: "cancelado",
@@ -422,6 +434,7 @@ export const translations: Record<LanguageCode, Translation> = {
     lossy: "Com perdas",
     format: "Formato",
     quality: "Qualidade",
+    targetSize: "Tamanho alvo (KB)",
     estimatedLoss: "Perda estimada",
     none: "Nenhuma",
     low: "Baixa",
@@ -439,6 +452,7 @@ export const translations: Record<LanguageCode, Translation> = {
     downloadImage: "Baixar imagem",
     kept: "mantido",
     keptOriginal: "Original mantido",
+    targetNotReached: "Resultado mais próximo; meta não atingida",
     queued: "na fila",
     failed: "falhou",
     cancelled: "cancelado",

@@ -62,6 +62,10 @@ function statusLabel(job: ImageJob, t: Translation): string {
     return t.keptOriginal;
   }
 
+  if (job.result?.targetReached === false) {
+    return t.targetNotReached;
+  }
+
   if (job.status === "queued") {
     return t.queued;
   }
@@ -412,6 +416,17 @@ export default function ImagePrepApp({ pageHeading, preset }: Props) {
                 value={settings.quality}
                 disabled={isLossless}
                 onChange={(event) => updateSettings({ quality: Number(event.target.value) })}
+              />
+            </label>
+            <label>
+              {t.targetSize}
+              <input
+                type="number"
+                min="0"
+                step="10"
+                value={settings.targetSizeKb}
+                disabled={isLossless}
+                onChange={(event) => updateSettings({ targetSizeKb: Math.max(0, Number(event.target.value)) })}
               />
             </label>
             <div className={`lossMeter ${lossEstimate.label.toLowerCase()}`}>

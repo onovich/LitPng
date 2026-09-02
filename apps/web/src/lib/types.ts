@@ -9,6 +9,7 @@ export type ImageSettings = {
   compressionMode: CompressionMode;
   outputFormat: OutputFormat;
   quality: number;
+  targetSizeKb: number;
   renamePattern: string;
   prefix: string;
   suffix: string;
@@ -52,6 +53,9 @@ export type ProcessedImage = {
   height: number;
   size: number;
   durationMs: number;
+  qualityUsed: number;
+  encodeAttempts: number;
+  targetReached?: boolean;
   outcome: "compressed" | "kept-original" | "converted" | "transformed";
 };
 
@@ -80,6 +84,7 @@ export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
     compressionMode: "lossless",
     outputFormat: "original",
     quality: 0.82,
+    targetSizeKb: 0,
     renamePattern: "{original}",
     prefix: "",
     suffix: "-little",

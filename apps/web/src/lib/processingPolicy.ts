@@ -36,6 +36,7 @@ export function normalizedSettings(settings: ImageSettings): ImageSettings {
   return {
     ...settings,
     outputFormat: "image/png",
+    targetSizeKb: 0,
     maxWidth: 0,
     maxHeight: 0,
     cropMode: "fit"

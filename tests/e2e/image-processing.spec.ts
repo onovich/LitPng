@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { toolPages } from "../../apps/web/src/data/toolPages";
 import {
   PNG_SIGNATURE,
+  fixturePng,
   pngChunkTypes,
   transparentFixturePng
 } from "../helpers/imageFixtures";
@@ -49,6 +50,28 @@ test("PNG graphics can be converted through the MozJPEG worker path", async ({ p
 
   expect([...output.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
   expect([...output.subarray(-2)]).toEqual([0xff, 0xd9]);
+});
+
+test("target size search selects a JPEG result within the requested budget", async ({ page }) => {
+  await page.goto("/jpg-compressor/");
+  await page.getByLabel("Target size (KB)").fill("12");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "gradient.png",
+    mimeType: "image/png",
+    buffer: fixturePng("gradient")
+  });
+  await page.getByRole("button", { name: "Run batch" }).click();
+  await expect(page.getByRole("button", { name: "Download image" })).toBeVisible();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download image" }).click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  expect(path).not.toBeNull();
+  const output = readFileSync(path!);
+
+  expect([...output.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+  expect(output.length).toBeLessThanOrEqual(12 * 1024);
 });
 
 test("technical SEO exposes every tool route", async ({ request }) => {

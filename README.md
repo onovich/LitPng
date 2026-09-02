@@ -14,6 +14,7 @@ cropping, and conversion.
 - Rust `imagequant` WASM for lossy indexed PNG with palette alpha.
 - `@jsquash/png` for lossless PNG and MozJPEG from `@jsquash/jpeg` for JPEG.
 - Minimum-quality, lossless-fallback, and keep-original safeguards.
+- Optional per-image target size using a bounded quality search.
 
 ## Getting started
 

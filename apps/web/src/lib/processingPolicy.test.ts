@@ -84,6 +84,7 @@ describe("shouldKeepOriginal", () => {
         compressionMode: "lossless",
         outputFormat: "image/jpeg",
         quality: 0.5,
+        targetSizeKb: 120,
         renamePattern: "{original}",
         prefix: "",
         suffix: "",
@@ -98,6 +99,7 @@ describe("shouldKeepOriginal", () => {
       })
     ).toMatchObject({
       outputFormat: "image/png",
+      targetSizeKb: 0,
       maxWidth: 0,
       maxHeight: 0,
       cropMode: "fit"
@@ -111,6 +113,7 @@ describe("shouldKeepOriginal", () => {
           compressionMode: "lossless",
           outputFormat: "original",
           quality: 0.5,
+          targetSizeKb: 0,
           renamePattern: "{original}",
           prefix: "",
           suffix: "",
@@ -134,6 +137,7 @@ describe("shouldKeepOriginal", () => {
         compressionMode: "lossy",
         outputFormat: "image/png",
         quality: 0.82,
+        targetSizeKb: 0,
         renamePattern: "{original}",
         prefix: "",
         suffix: "",

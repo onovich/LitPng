@@ -103,6 +103,10 @@ Use the root `ManualSmoke.cmd` for a double-clickable smoke entry.
   Use the dedicated `vite preview` test command instead.
 - Keep production dependency auditing in CI. When upgrading Astro, remove stale
   transitive overrides that can force incompatible CSS parser versions.
+- Target-size compression needs a hard attempt ceiling. Treat selected quality
+  as the maximum, choose the highest tested quality under the byte budget, and
+  return the smallest valid attempt with an explicit warning if the target is
+  unreachable.
 
 ## Commit Checklist
 
