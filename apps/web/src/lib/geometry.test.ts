@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCropBox, createResizeCropPlan, fitWithin } from "./geometry";
+import { createCropBox, createResizeCropPlan, fitWithin, cropFrameOrigin } from "./geometry";
 
 describe("fitWithin", () => {
   it("keeps smaller images at original size", () => {
@@ -63,5 +63,32 @@ describe("createResizeCropPlan", () => {
     );
 
     expect(plan.output).toEqual({ width: 840, height: 630 });
+  });
+});
+
+
+describe("visual batch crop", () => {
+  it("places all nine anchors on their matching source positions", () => {
+    const frame = { width: 100, height: 80, offsetX: 0, offsetY: 0 };
+    const anchors = ["top-left", "top", "top-right", "left", "center", "right", "bottom-left", "bottom", "bottom-right"] as const;
+    anchors.forEach((anchor, i) => {
+      expect(cropFrameOrigin({ width: 300, height: 240 }, frame, anchor)).toEqual({ x: (i % 3) * 100, y: Math.floor(i / 3) * 80 });
+    });
+  });
+  it("uses the same native pixel dimensions and relative offsets across a batch", () => {
+    const settings = { maxWidth: 100, maxHeight: 80, cropMode: "crop" as const, cropAnchor: "bottom-right" as const, cropFrame: { width: 100, height: 80, offsetX: -20, offsetY: -10 } };
+    for (const source of [{ width: 300, height: 240 }, { width: 500, height: 400 }]) {
+      const plan = createResizeCropPlan(source, settings);
+      expect(plan.output).toEqual({ width: 100, height: 80 });
+      expect(plan.crop).toEqual({ sx: source.width - 120, sy: source.height - 90, sw: 100, sh: 80, dx: 0, dy: 0, dw: 100, dh: 80 });
+    }
+  });
+  it("clamps offsets at each image boundary", () => {
+    expect(cropFrameOrigin({ width: 300, height: 240 }, { width: 100, height: 80, offsetX: 1000, offsetY: -1000 }, "center")).toEqual({ x: 200, y: 0 });
+  });
+  it("pads smaller sources while preserving exact batch dimensions and anchor", () => {
+    const plan = createResizeCropPlan({ width: 60, height: 40 }, { maxWidth: 100, maxHeight: 80, cropMode: "crop", cropAnchor: "bottom-right", cropFrame: { width: 100, height: 80, offsetX: 0, offsetY: 0 } });
+    expect(plan.output).toEqual({ width: 100, height: 80 });
+    expect(plan.crop).toEqual({ sx: 0, sy: 0, sw: 60, sh: 40, dx: 40, dy: 40, dw: 60, dh: 40 });
   });
 });

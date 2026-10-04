@@ -1,4 +1,5 @@
-import type { ImageSettings } from "./types";
+import { cloneImageSettings, type ImageSettings } from "./types";
+import { isValidOutputWidths } from "./multiSize";
 
 export const SAVED_PRESETS_STORAGE_KEY = "littlepng-saved-presets-v1";
 export const MAX_SAVED_PRESETS = 20;
@@ -13,7 +14,7 @@ export type SavedPreset = {
 const compressionModes = new Set(["lossless", "lossy"]);
 const outputFormats = new Set(["original", "image/jpeg", "image/png", "image/webp"]);
 const cropModes = new Set(["fit", "fill", "crop"]);
-const cropAnchors = new Set(["center", "top", "bottom", "left", "right"]);
+const cropAnchors = new Set(["center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right"]);
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -39,6 +40,8 @@ export function isImageSettings(value: unknown): value is ImageSettings {
     typeof settings.stripSpecial === "boolean" &&
     isFiniteNumber(settings.maxWidth) &&
     isFiniteNumber(settings.maxHeight) &&
+    isValidOutputWidths(settings.outputWidths) &&
+    (settings.cropFrame === undefined || isCropFrame(settings.cropFrame)) &&
     typeof settings.cropMode === "string" && cropModes.has(settings.cropMode) &&
     typeof settings.cropAnchor === "string" && cropAnchors.has(settings.cropAnchor) &&
     typeof settings.background === "string"
@@ -75,7 +78,7 @@ export function parseSavedPresets(raw: string | null): SavedPreset[] {
     return parsed.filter(isSavedPreset).slice(0, MAX_SAVED_PRESETS).map((preset) => ({
       ...preset,
       name: preset.name.trim().slice(0, 40),
-      settings: { ...preset.settings }
+      settings: cloneImageSettings(preset.settings)
     }));
   } catch {
     return [];
@@ -98,10 +101,17 @@ export function upsertSavedPreset(
   const saved: SavedPreset = {
     id: existing?.id ?? id,
     name: normalizedName,
-    settings: { ...settings },
+    settings: cloneImageSettings(settings),
     updatedAt
   };
   const remaining = presets.filter((preset) => preset.id !== saved.id);
 
   return { presets: [saved, ...remaining].slice(0, MAX_SAVED_PRESETS), saved };
+}
+
+function isCropFrame(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const frame = value as Record<string, unknown>;
+  return ["width", "height"].every((key) => isFiniteNumber(frame[key]) && Number.isInteger(frame[key]) && (frame[key] as number) >= 1 && (frame[key] as number) <= 8192) &&
+    ["offsetX", "offsetY"].every((key) => isFiniteNumber(frame[key]) && Math.abs(frame[key] as number) <= 32768);
 }

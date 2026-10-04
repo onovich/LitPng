@@ -37,7 +37,9 @@ Progress counts terminal responses for the current attempt, including failures.
 After a graceful stop it can remain below the total. Optional history records
 only the images actually attempted, not the unstarted cancelled files. Savings
 compare successful input/output pairs so queued/failed images do not inflate the
-saved-byte total.
+saved-byte total. Multi-size jobs share the source File reference; each source is
+counted once in input bytes, while every variant counts toward progress and output
+bytes. See [multi-size outputs](multi-size-outputs.md) for settings-edit behavior.
 
 ## Verification
 

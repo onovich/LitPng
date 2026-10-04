@@ -63,7 +63,7 @@ test("125-image queue uses bounded decoding, pagination, and explicit result cle
   }
   await page.getByRole("button", { name: "Remove completed" }).click();
   await expect(page.locator(".fileRow")).toHaveCount(0);
-  await expect(page.getByTitle("Download ZIP")).toBeDisabled();
+  await expect(page.getByTitle("Download ZIP")).toHaveCount(0);
 });
 
 for (const action of ["resume", "stop"] as const) {
@@ -75,7 +75,7 @@ for (const action of ["resume", "stop"] as const) {
     await page.getByLabel("Add images").setInputFiles(fixtures(3));
     await page.getByRole("button", { name: "Run batch" }).click();
     await page.getByRole("button", { name: "Pause queue" }).click();
-    await expect(page.getByLabel("Max width")).toBeDisabled();
+    await expect(page.getByLabel("Quality")).toBeDisabled();
     await expect(page.getByRole("button", { name: "Clear queue" })).toBeDisabled();
     await expect(page.getByRole("button", { name: "Add images", exact: true })).toBeDisabled();
     release();

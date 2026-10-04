@@ -2,7 +2,8 @@ import type { ToolPage } from "../data/toolPages";
 
 export type OutputFormat = "original" | "image/jpeg" | "image/png" | "image/webp";
 export type CropMode = "fit" | "fill" | "crop";
-export type CropAnchor = "center" | "top" | "bottom" | "left" | "right";
+export type CropAnchor = "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+export type CropFrame = { width: number; height: number; offsetX: number; offsetY: number };
 export type CompressionMode = "lossless" | "lossy";
 
 export type ImageSettings = {
@@ -19,8 +20,10 @@ export type ImageSettings = {
   stripSpecial: boolean;
   maxWidth: number;
   maxHeight: number;
+  outputWidths?: number[];
   cropMode: CropMode;
   cropAnchor: CropAnchor;
+  cropFrame?: CropFrame;
   background: string;
 };
 
@@ -36,6 +39,9 @@ export type ImageJob = {
   file: File;
   sourceName: string;
   sourceRelativePath?: string;
+  sourceGroupId?: string;
+  sourceIndex?: number;
+  variantWidth?: number;
   outputName: string;
   sourceSize: number;
   sourceType: string;
@@ -105,7 +111,7 @@ export type WorkerResponse =
 
 export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
   const base: ImageSettings = {
-    compressionMode: "lossless",
+    compressionMode: "lossy",
     outputFormat: "original",
     quality: 0.82,
     targetSizeKb: 0,
@@ -118,8 +124,10 @@ export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
     stripSpecial: true,
     maxWidth: 0,
     maxHeight: 0,
+    outputWidths: [],
     cropMode: "fit",
     cropAnchor: "center",
+    cropFrame: undefined,
     background: "#ffffff"
   };
 
@@ -144,4 +152,8 @@ export function settingsForPreset(preset: ToolPage["preset"]): ImageSettings {
   }
 
   return base;
+}
+
+export function cloneImageSettings(settings: ImageSettings): ImageSettings {
+  return { ...settings, cropFrame: settings.cropFrame ? { ...settings.cropFrame } : undefined, outputWidths: [...(settings.outputWidths ?? [])] };
 }

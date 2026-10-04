@@ -74,9 +74,10 @@ test("lossy PNG uses imagequant WASM and preserves palette transparency", async 
 
 test("PNG graphics can be converted through the MozJPEG worker path", async ({ page }) => {
   await page.goto("/jpg-compressor/");
+  await addFixture(page);
+  await page.locator(".advancedOptions > summary").click();
   await page.getByLabel("Pattern").fill("{date}-{original}-{index}");
   await page.getByLabel("Suffix").fill("");
-  await addFixture(page);
   await page.getByRole("button", { name: "Run batch" }).click();
   await expect(page.getByRole("button", { name: "Download image" })).toBeVisible();
 
@@ -94,12 +95,12 @@ test("PNG graphics can be converted through the MozJPEG worker path", async ({ p
 
 test("target size search selects a JPEG result within the requested budget", async ({ page }) => {
   await page.goto("/jpg-compressor/");
-  await page.getByLabel("Target size (KB)").fill("12");
   await page.getByLabel("Add images").setInputFiles({
     name: "gradient.png",
     mimeType: "image/png",
     buffer: fixturePng("gradient")
   });
+  await page.getByLabel("Target size (KB)").fill("12");
   await page.getByRole("button", { name: "Run batch" }).click();
   await expect(page.getByRole("button", { name: "Download image" })).toBeVisible();
 
@@ -128,16 +129,20 @@ test("target size search selects a JPEG result within the requested budget", asy
 
 test("Open Graph preset produces a real 1200 by 630 sharing card", async ({ page }) => {
   await page.goto("/");
-  await page.getByLabel("Publishing preset").selectOption("open-graph");
-  await expect(page.getByText("JPEG sharing card cropped to the common 1200 × 630 ratio.")).toBeVisible();
-  await expect(page.getByLabel("Max width")).toHaveValue("1200");
-  await expect(page.getByLabel("Max height")).toHaveValue("630");
-
   await page.getByLabel("Add images").setInputFiles({
     name: "sharing-card-source.png",
     mimeType: "image/png",
     buffer: fixturePng("gradient", 1600, 1200)
   });
+  await page.getByRole("button", { name: "Next: resize & crop" }).click();
+  await page.getByRole("button", { name: "fit", exact: true }).click();
+  await page.locator(".advancedOptions > summary").click();
+  await page.getByLabel("Publishing preset").selectOption("open-graph");
+  await expect(page.getByText("JPEG sharing card cropped to the common 1200 × 630 ratio.")).toBeVisible();
+  await expect(page.getByLabel("Max width")).toHaveValue("1200");
+  await expect(page.getByLabel("Max height")).toHaveValue("630");
+
+
   await page.getByRole("button", { name: "Run batch" }).click();
   await expect(page.getByRole("button", { name: "Download image" })).toBeVisible();
 
@@ -152,6 +157,10 @@ test("Open Graph preset produces a real 1200 by 630 sharing card", async ({ page
 
 test("custom presets persist, apply, and delete in the browser", async ({ page }) => {
   await page.goto("/");
+  await addFixture(page);
+  await page.getByRole("button", { name: "Next: resize & crop" }).click();
+  await page.getByRole("button", { name: "fit", exact: true }).click();
+  await page.locator(".advancedOptions > summary").click();
   await page.getByLabel("Publishing preset").selectOption("open-graph");
   await page.getByLabel("Preset name").fill("Social cards");
   await page.getByTitle("Save").click();
@@ -160,6 +169,10 @@ test("custom presets persist, apply, and delete in the browser", async ({ page }
   await page.getByLabel("Max width").fill("900");
   await expect(page.getByLabel("My presets")).toHaveValue("");
   await page.reload();
+  await addFixture(page);
+  await page.getByRole("button", { name: "Next: resize & crop" }).click();
+  await page.getByRole("button", { name: "fit", exact: true }).click();
+  await page.locator(".advancedOptions > summary").click();
   await page.getByLabel("My presets").selectOption({ label: "Social cards" });
   await expect(page.getByLabel("Max width")).toHaveValue("1200");
   await expect(page.getByLabel("Max height")).toHaveValue("630");
@@ -188,6 +201,8 @@ test("technical SEO exposes every tool route", async ({ request }) => {
 test("folder import and custom naming controls fit a narrow viewport", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/compress-and-rename-images/");
+  await addFixture(page);
+  await page.locator(".advancedOptions > summary").click();
 
   await expect(page.getByRole("button", { name: "Add images" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Add folder" })).toBeVisible();

@@ -22,6 +22,8 @@
 - 支持在当前浏览器中保存、覆盖、应用和删除自定义预设。
 - 可选择记录本地批次历史、查看统计并复用参数，不持久保存图片文件。
 - 队列支持串行解码、暂停/继续/停止、50 条分页及清理已完成项。
+- 每张原图最多生成 6 个宽度版本，支持独立下载、ZIP 导出及 CSV 实际尺寸记录。
+- 可复制或下载响应式 HTML，使用实际宽度生成 `srcset` 并支持调整 `sizes`。
 
 ## 快速开始
 
@@ -69,6 +71,8 @@ npm run codec:build-wasm
 - [`docs/publishing-presets.md`](docs/publishing-presets.md)
 - [`docs/batch-history.md`](docs/batch-history.md)
 - [`docs/large-queue.md`](docs/large-queue.md)
+- [`docs/multi-size-outputs.md`](docs/multi-size-outputs.md)
+- [`docs/srcset-export.md`](docs/srcset-export.md)
 - [`docs/project-lessons.md`](docs/project-lessons.md)
 
 ## 当前状态
@@ -77,4 +81,4 @@ npm run codec:build-wasm
 
 ## 许可证
 
-当前仓库未包含开源许可证。所选 `imagequant` 依赖要求在发布前明确选择 GPL 兼容或商业授权策略；发布自动化必须通过 `npm run release:license-check`。
+LittlePNG 采用 GPL-3.0-or-later，见 [LICENSE](LICENSE)。第三方组件保留各自许可证；公开发布还须携带第三方声明和对应源码信息，完成[发布检查清单](docs/licensing-release-gate.md)。

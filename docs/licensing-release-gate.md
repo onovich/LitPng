@@ -2,10 +2,29 @@
 
 ## Current Status
 
-Release is intentionally blocked until the product owner selects one of the
-two supported imagequant distribution paths. Development, tests, and private
-evaluation may continue, but a public or commercial release must not bypass
-this decision.
+The selected distribution path is GPL-3.0-or-later (2026-09-05), following the
+owner's acceptance of the open-source direction. The repository LICENSE and
+package metadata now record that choice. Public deployment remains pending the
+release packaging checks below; the environment-variable check alone does not
+verify source completeness or third-party attribution.
+
+## Public Deployment Checklist
+
+- [x] Add GPL-3.0 text and GPL-3.0-or-later package metadata.
+- [x] Bundle runtime dependency licenses, including imagequant's complete
+  COPYRIGHT (with historical notices) and jSquash's codec licenses.
+- [ ] Identify the exact corresponding source and build instructions for the
+  shipped jSquash JPEG/PNG WASM, including bundled upstream codec components.
+  Progress: npm gitHead revisions and WASM Git blob hashes match upstream;
+  JPEG's Makefile selects MozJPEG v3.3.1. Remaining: review notices/source
+  coverage for all transitive components of jSquash's separate PNG Cargo.lock.
+  The lockfile and source inventory now live in `third-party/jsquash-png`;
+  the notice generator reads both Cargo workspaces and emits exact crate URLs.
+- [ ] Publish the exact LittlePNG release source, lockfiles and build scripts,
+  with corresponding dependency source access alongside the downloadable build.
+- [x] Expose license, third-party notices, warranty disclaimer and source links
+  from the application build (not yet deployed).
+- [ ] Verify the final deployment artifact and its source links before upload.
 
 ## Option 1: GPL-Compatible Distribution
 

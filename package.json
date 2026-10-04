@@ -1,6 +1,7 @@
 {
   "name": "littlepng",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "version": "0.1.0",
   "type": "module",
   "engines": {
@@ -19,6 +20,9 @@
     "preview": "npm --workspace @littlepng/web run preview",
     "preview:test": "npm --workspace @littlepng/web run preview:test",
     "release:license-check": "node scripts/check-release-license.mjs",
+    "release:prepare-notices": "node scripts/prepare-license-notices.mjs",
+    "release:prepare-source": "node scripts/prepare-release-source.mjs",
+    "release:build": "npm run release:prepare-source && npm run build",
     "test": "npm --workspace @littlepng/web run test",
     "test:e2e": "npm run build && playwright test",
     "test:release-license": "node --test scripts/check-release-license.test.mjs",

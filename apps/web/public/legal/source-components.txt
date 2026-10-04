@@ -1,0 +1,39 @@
+LittlePNG source components
+
+LittlePNG source and build instructions:
+Exact source snapshot for this build: /legal/littlepng-source.zip
+Snapshot SHA-256: /legal/source-sha256.txt
+https://github.com/onovich/LitPng
+Own wrapper: packages/pngquant-wasm/src/lib.rs
+Dependency versions: Cargo.lock and package-lock.json
+WASM build command: npm run codec:build-wasm
+Web build command: npm ci && npm run build
+Toolchain versions: .github/workflows/validate.yml
+
+libimagequant 4.4.1 (GPL-3.0-or-later with historical notices):
+https://crates.io/crates/imagequant/4.4.1
+https://github.com/ImageOptim/libimagequant
+All notices are reproduced in third-party-notices.txt.
+Exact source archive URLs for both Rust dependency trees: /legal/rust-sources.txt
+
+@jsquash/jpeg 1.6.0:
+npm registry gitHead: 1f62015f53e28bd18b2d7c8a3ca3326577efc445
+https://github.com/jamsinclair/jSquash/tree/1f62015f53e28bd18b2d7c8a3ca3326577efc445/packages/jpeg
+Codec wrapper and build recipe: packages/jpeg/codec/Makefile
+The build recipe selects MozJPEG v3.3.1:
+https://github.com/mozilla/mozjpeg/tree/v3.3.1
+Verified encoder WASM Git blob SHA-1 (matches installed npm package):
+30db998db5079edc87c6ae5313de6f5e4ce749dc
+
+@jsquash/png 3.1.1:
+npm registry gitHead: b7fa9ac9ec02f224847ad23d19d115f9e296a368
+https://github.com/jamsinclair/jSquash/tree/b7fa9ac9ec02f224847ad23d19d115f9e296a368/packages/png
+Codec wrapper and locked Rust dependencies: packages/png/codec/
+Verified PNG WASM Git blob SHA-1 (matches installed npm package):
+8bf8fdfa62fa2e83a3a8ce77f2c0dd8b9bbd53fb
+
+These npm gitHead values identify upstream package source revisions. The shipped
+WASM matches the binary checked into each upstream revision. This is provenance
+verification, not an independent reproducible rebuild. Final release source
+publication and artifact verification are tracked in
+docs/licensing-release-gate.md before public deployment.

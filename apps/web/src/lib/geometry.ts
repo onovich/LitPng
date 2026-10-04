@@ -1,4 +1,4 @@
-import type { CropAnchor, CropMode } from "./types";
+import type { CropAnchor, CropMode, CropFrame } from "./types";
 
 export type ImageSize = {
   width: number;
@@ -26,6 +26,7 @@ export type ResizeCropSettings = {
   maxHeight: number;
   cropMode: CropMode;
   cropAnchor: CropAnchor;
+  cropFrame?: CropFrame;
 };
 
 export function fitWithin(source: ImageSize, maxWidth: number, maxHeight: number): ImageSize {
@@ -69,29 +70,24 @@ export function createCropBox(
     sh = source.width / targetRatio;
   }
 
-  let sx = (source.width - sw) / 2;
-  let sy = (source.height - sh) / 2;
-
-  if (anchor === "left") {
-    sx = 0;
-  }
-
-  if (anchor === "right") {
-    sx = source.width - sw;
-  }
-
-  if (anchor === "top") {
-    sy = 0;
-  }
-
-  if (anchor === "bottom") {
-    sy = source.height - sh;
-  }
+  const point = anchorPoint(anchor);
+  const sx = (source.width - sw) * point.x;
+  const sy = (source.height - sh) * point.y;
 
   return { sx, sy, sw, sh, dx: 0, dy: 0, dw: target.width, dh: target.height };
 }
 
 export function createResizeCropPlan(source: ImageSize, settings: ResizeCropSettings): ResizeCropPlan {
+  if (settings.cropMode === "crop" && settings.cropFrame) {
+    const frame = settings.cropFrame;
+    const origin = cropFrameOrigin(source, frame, settings.cropAnchor);
+    const sx = Math.max(0, origin.x), sy = Math.max(0, origin.y);
+    const sw = Math.max(0, Math.min(source.width, origin.x + frame.width) - sx);
+    const sh = Math.max(0, Math.min(source.height, origin.y + frame.height) - sy);
+    return { output: { width: frame.width, height: frame.height }, crop: {
+      sx, sy, sw, sh, dx: sx - origin.x, dy: sy - origin.y, dw: sw, dh: sh
+    } };
+  }
   const hasFixedCropTarget =
     settings.cropMode !== "fit" && settings.maxWidth > 0 && settings.maxHeight > 0;
   const output = hasFixedCropTarget
@@ -109,5 +105,21 @@ function cropTargetWithoutUpscaling(source: ImageSize, targetWidth: number, targ
   return {
     width: Math.max(1, Math.round(targetWidth * scale)),
     height: Math.max(1, Math.round(targetHeight * scale))
+  };
+}
+
+export function anchorPoint(anchor: CropAnchor): { x: number; y: number } {
+  return {
+    x: anchor.includes("left") ? 0 : anchor.includes("right") ? 1 : 0.5,
+    y: anchor.includes("top") ? 0 : anchor.includes("bottom") ? 1 : 0.5
+  };
+}
+
+export function cropFrameOrigin(source: ImageSize, frame: CropFrame, anchor: CropAnchor) {
+  const point = anchorPoint(anchor);
+  const clamp = (value: number, difference: number) => Math.min(Math.max(0, difference), Math.max(Math.min(0, difference), value));
+  return {
+    x: clamp((source.width - frame.width) * point.x + frame.offsetX, source.width - frame.width),
+    y: clamp((source.height - frame.height) * point.y + frame.offsetY, source.height - frame.height)
   };
 }

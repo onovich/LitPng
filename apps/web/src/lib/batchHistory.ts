@@ -1,5 +1,6 @@
 import { isImageSettings } from "./savedPresets";
-import { settingsForPreset, type ImageJob, type ImageSettings } from "./types";
+import { cloneImageSettings, settingsForPreset, type ImageJob, type ImageSettings } from "./types";
+import { uniqueSourceBytes } from "./multiSize";
 
 export const HISTORY_STORAGE_KEY = "littlepng-batch-history-v1";
 export const MAX_HISTORY_ENTRIES = 20;
@@ -22,9 +23,9 @@ export type BatchHistoryState = {
 
 // Copy only known settings, never arbitrary properties from local storage.
 function snapshotSettings(settings: ImageSettings): ImageSettings {
-  return Object.fromEntries(
+  return cloneImageSettings(Object.fromEntries(
     Object.keys(settingsForPreset("balanced")).map((key) => [key, settings[key as keyof ImageSettings]])
-  ) as ImageSettings;
+  ) as ImageSettings);
 }
 
 export function createBatchHistoryEntry(
@@ -43,8 +44,8 @@ export function createBatchHistoryEntry(
     finishedAt,
     completed: completed.length,
     failed: failed.length,
-    // Comparing only successful pairs avoids counting failed files as savings.
-    inputBytes: completed.reduce((sum, job) => sum + job.sourceSize, 0),
+    // Count each successful source once even when it generates several outputs.
+    inputBytes: uniqueSourceBytes(completed),
     outputBytes: completed.reduce((sum, job) => sum + job.result!.size, 0),
     durationMs: Math.max(0, Math.round(durationMs)),
     settings: snapshotSettings(settings)

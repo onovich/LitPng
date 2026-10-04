@@ -19,6 +19,15 @@ const completed: ImageJob = {
 const entry = createBatchHistoryEntry("batch", "2026-09-03T00:00:00.000Z", settings, [completed, failed], 200)!;
 
 describe("batch history", () => {
+  it("counts a multi-size source once and snapshots its width list", () => {
+    const widths = [128, 256];
+    const jobs = [128, 256].map((width) => ({ ...completed, id: String(width), sourceGroupId: "source", variantWidth: width }));
+    const snapshot = createBatchHistoryEntry("multi", entry.finishedAt, { ...settings, outputWidths: widths }, jobs, 100)!;
+    widths.push(512);
+    expect(snapshot).toMatchObject({ completed: 2, inputBytes: 1000, outputBytes: 1200 });
+    expect(snapshot.settings.outputWidths).toEqual([128, 256]);
+    expect(parseBatchHistory(serializeBatchHistory({ enabled: true, entries: [snapshot] })).entries[0]).toEqual(snapshot);
+  });
   it("stores counts and successful input/output pairs without source information", () => {
     expect(entry).toMatchObject({ completed: 1, failed: 1, inputBytes: 1000, outputBytes: 600, durationMs: 200 });
     const serialized = serializeBatchHistory({ enabled: true, entries: [entry] });

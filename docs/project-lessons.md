@@ -122,6 +122,13 @@ Use the root `ManualSmoke.cmd` for a double-clickable smoke entry.
   explicit way to release retained results. A single shared Worker must not be
   reported as multiple workers. Pause/stop semantics must specify whether the
   current image finishes, and worker errors/timeouts must settle pending jobs.
+- Multi-size output identity must be independent of a row's position: keep a
+  stable source group and source naming index, share its File object, and reserve
+  completed archive paths before assigning names to pending variants. Reconcile
+  variants only on import/settings edits, not on progress updates or retries.
+- Width limits are not actual output widths when upscaling is disabled. Label
+  filename suffixes as limits and report encoded dimensions. Count a successful
+  source once in aggregate input bytes, not once per generated variant.
 - Every naming token exposed in the UI must be implemented in the pure filename
   helper. Unknown tokens should be removed safely instead of leaking braces or
   placeholder text into exported filenames.
@@ -133,6 +140,12 @@ Use the root `ManualSmoke.cmd` for a double-clickable smoke entry.
   object URLs when the dialog closes.
 
 ## Commit Checklist
+
+- Responsive HTML must describe actual encoded dimensions, not requested limits.
+  Deduplicate width descriptors per source/format without changing ZIP artifacts.
+  Encode URL path segments before escaping HTML attributes; keep clipboard-denied
+  recovery keyboard-accessible and document that generated relative paths assume
+  the ZIP root. Do not infer informative alt text from file names.
 
 Before pushing product or codec changes, run:
 
@@ -150,3 +163,15 @@ Also check:
 - No `node_modules`, `target`, or `apps/web/dist` files are staged.
 - New docs and scripts are UTF-8 without BOM when relevant.
 - Dependency direction still matches `docs/phase0-architecture.md`.
+# 2026-09-05: Domain activation and release preparation
+
+- GoDaddy nameserver changes require the final Continue confirmation after Save.
+  Verify the persisted Nameservers page and registry delegation before telling
+  the owner to wait for propagation; an unsubmitted change will never propagate.
+- DNS activation is independent of application deployment. The owner confirmed
+  littlepng.com is active on Cloudflare Free, with mary/quincy nameservers.
+- GPL-3.0-or-later is now recorded in the repository. The minimal license gate
+  checks a mode/file, not complete source distribution. Follow the release
+  checklist before any public upload.
+- jSquash npm gitHead revisions can be matched against upstream checked-in WASM
+  Git blob hashes. Raw GitHub timed out locally; GitHub's contents API succeeded.

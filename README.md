@@ -23,6 +23,8 @@ cropping, and conversion.
 - Browser-local saved custom presets with apply, overwrite, and delete controls.
 - Opt-in local batch history with summary statistics and reusable settings, without storing image files.
 - Bounded queue decoding, pause/resume/stop controls, 50-row pagination, and explicit completed-result cleanup.
+- Up to six width variants per source, with individual downloads, ZIP export, and actual dimensions in CSV reports.
+- Copy or download responsive HTML with actual-width `srcset` candidates and editable `sizes`.
 
 ## Getting started
 
@@ -72,11 +74,13 @@ npm run codec:build-wasm
 - [`docs/publishing-presets.md`](docs/publishing-presets.md)
 - [`docs/batch-history.md`](docs/batch-history.md)
 - [`docs/large-queue.md`](docs/large-queue.md)
+- [`docs/multi-size-outputs.md`](docs/multi-size-outputs.md)
+- [`docs/srcset-export.md`](docs/srcset-export.md)
 - [`docs/project-lessons.md`](docs/project-lessons.md)
 
 ## License
 
-No open-source license is currently included in this repository. The selected
-`imagequant` dependency requires an explicit GPL-compatible or commercial
-license strategy before release. Release automation must pass
-`npm run release:license-check`.
+LittlePNG is licensed under GPL-3.0-or-later; see [LICENSE](LICENSE).
+Third-party components retain their own licenses. Public releases must include
+their notices and corresponding source information, as tracked in
+[the release checklist](docs/licensing-release-gate.md).

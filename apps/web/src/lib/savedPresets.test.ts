@@ -3,6 +3,17 @@ import { MAX_SAVED_PRESETS, parseSavedPresets, upsertSavedPreset } from "./saved
 import { settingsForPreset } from "./types";
 
 describe("saved presets", () => {
+  it("loads legacy single-size presets and copies multi-size arrays", () => {
+    const settings = settingsForPreset("jpg");
+    delete settings.outputWidths;
+    const old = { id: "old", name: "Legacy", settings, updatedAt: "now" };
+    expect(parseSavedPresets(JSON.stringify([old]))[0].settings.outputWidths).toEqual([]);
+    const widths = [128, 256];
+    const result = upsertSavedPreset([], "Responsive", { ...settings, outputWidths: widths }, "new", "now");
+    widths.push(512);
+    expect(result.saved.settings.outputWidths).toEqual([128, 256]);
+    expect(parseSavedPresets(JSON.stringify([{ ...old, settings: { ...settings, outputWidths: [0] } }]))).toEqual([]);
+  });
   it("ignores corrupted and structurally invalid storage data", () => {
     expect(parseSavedPresets("not json")).toEqual([]);
     expect(parseSavedPresets(JSON.stringify([{ id: "broken", name: "Broken" }]))).toEqual([]);
@@ -40,4 +51,19 @@ describe("saved presets", () => {
     expect(presets).toHaveLength(MAX_SAVED_PRESETS);
     expect(presets[0].name).toBe(`Preset ${MAX_SAVED_PRESETS + 1}`);
   });
+});
+
+
+it("persists visual crop anchors and offsets without sharing mutable frame settings", () => {
+  const frame = { width: 100, height: 80, offsetX: -20, offsetY: -10 };
+  const settings = { ...settingsForPreset("balanced"), cropAnchor: "bottom-right" as const, cropMode: "crop" as const, cropFrame: frame };
+  const result = upsertSavedPreset([], "Crop", settings, "crop", "now");
+  frame.width = 200;
+  expect(result.saved.settings.cropFrame?.width).toBe(100);
+  const parsed = parseSavedPresets(JSON.stringify(result.presets));
+  expect(parsed[0].settings.cropFrame).toEqual({ width: 100, height: 80, offsetX: -20, offsetY: -10 });
+  expect(parsed[0].settings.cropAnchor).toBe("bottom-right");
+  for (const invalid of [{ ...frame, width: 0 }, { ...frame, height: 9000 }, { ...frame, offsetX: 40000 }]) {
+    expect(parseSavedPresets(JSON.stringify([{ ...result.saved, settings: { ...settings, cropFrame: invalid } }]))).toEqual([]);
+  }
 });

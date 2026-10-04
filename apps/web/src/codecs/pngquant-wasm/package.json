@@ -2,7 +2,7 @@
   "name": "littlepng-pngquant-wasm",
   "type": "module",
   "version": "0.1.0",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-or-later",
   "files": [
     "littlepng_pngquant_wasm_bg.wasm",
     "littlepng_pngquant_wasm.js",

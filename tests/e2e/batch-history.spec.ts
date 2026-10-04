@@ -3,22 +3,30 @@ import { HISTORY_STORAGE_KEY } from "../../apps/web/src/lib/batchHistory";
 import { settingsForPreset } from "../../apps/web/src/lib/types";
 import { transparentFixturePng } from "../helpers/imageFixtures";
 
-async function runBatch(page: Page) {
+async function addImage(page: Page) {
   await page.getByLabel("Add images").setInputFiles({
     name: "private-image.png", mimeType: "image/png", buffer: transparentFixturePng()
   });
+}
+
+async function runBatch(page: Page) {
+  if (await page.locator(".fileRow").count() === 0) await addImage(page);
   await page.getByRole("button", { name: "Run batch" }).click();
   await expect(page.getByRole("button", { name: "Download image" })).toBeVisible();
 }
 
 test("history is opt-in and restores only settings across reloads", async ({ page }) => {
   await page.goto("/jpg-compressor/");
+  await page.locator(".historyDisclosure").evaluate((el: HTMLDetailsElement) => { el.open = true; });
   const history = page.getByRole("region", { name: "Batch history" });
   await expect(page.getByLabel("Remember future batches in this browser")).not.toBeChecked();
   await runBatch(page);
   expect(await page.evaluate((key) => localStorage.getItem(key), HISTORY_STORAGE_KEY)).toBeNull();
   await page.getByRole("button", { name: "Clear queue" }).click();
   await page.getByLabel("Remember future batches in this browser").check();
+  await addImage(page);
+  await page.getByRole("button", { name: "Next: resize & crop" }).click();
+  await page.getByRole("button", { name: "fit", exact: true }).click();
   await page.getByLabel("Max width").fill("100");
   await runBatch(page);
   await expect(history.getByRole("listitem")).toHaveCount(1);
@@ -27,11 +35,15 @@ test("history is opt-in and restores only settings across reloads", async ({ pag
   expect(raw).not.toContain("private-image");
   expect(raw).not.toContain("blob");
 
-  // Clicking Run with only completed jobs must not append the same batch again.
-  await page.getByRole("button", { name: "Run batch" }).click();
+  // A completed resize batch returns to the initial view without a redundant Run action.
+  await expect(page.getByRole("button", { name: "Run batch" })).toHaveCount(0);
   await expect(history.getByRole("listitem")).toHaveCount(1);
   await page.reload();
+  await page.locator(".historyDisclosure > summary").click();
   await expect(history.getByRole("listitem")).toHaveCount(1);
+  await addImage(page);
+  await page.getByRole("button", { name: "Next: resize & crop" }).click();
+  await page.getByRole("button", { name: "fit", exact: true }).click();
   await expect(page.getByLabel("Max width")).toHaveValue("0");
   await history.getByRole("button", { name: "Reuse settings" }).focus();
   await page.keyboard.press("Enter");
@@ -41,6 +53,7 @@ test("history is opt-in and restores only settings across reloads", async ({ pag
   await expect(history.getByRole("listitem")).toHaveCount(0);
   await expect(history.getByRole("heading")).toBeFocused();
   await page.reload();
+  await page.locator(".historyDisclosure > summary").click();
   await expect(history.getByRole("listitem")).toHaveCount(0);
 });
 
@@ -54,6 +67,7 @@ test("malformed history and blocked storage do not break image processing", asyn
     };
   }, HISTORY_STORAGE_KEY);
   await page.goto("/png-compressor/");
+  await page.locator(".historyDisclosure > summary").click();
   await page.getByLabel("Remember future batches in this browser").click();
   await expect(page.getByLabel("Remember future batches in this browser")).not.toBeChecked();
   await expect(page.getByRole("alert")).toContainText("history storage is unavailable");
@@ -68,6 +82,7 @@ test("denied local storage reads do not prevent compression", async ({ page }) =
     Object.defineProperty(window, "localStorage", { get() { throw new DOMException("Blocked", "SecurityError"); } });
   });
   await page.goto("/jpg-compressor/");
+  await page.locator(".historyDisclosure").evaluate((el: HTMLDetailsElement) => { el.open = true; });
   await expect(page.getByRole("alert")).toContainText("history storage is unavailable");
   await runBatch(page);
   expect(errors).toEqual([]);
@@ -75,6 +90,7 @@ test("denied local storage reads do not prevent compression", async ({ page }) =
 
 test("populated history fits supported viewport widths", async ({ page }, testInfo) => {
   await page.goto("/jpg-compressor/");
+  await page.locator(".historyDisclosure").evaluate((el: HTMLDetailsElement) => { el.open = true; });
   await page.getByLabel("Remember future batches in this browser").check();
   await runBatch(page);
   const history = page.getByRole("region", { name: "Batch history" });
@@ -102,6 +118,7 @@ for (const action of ["clear", "disable"] as const) {
       await route.continue();
     });
     await page.goto("/jpg-compressor/");
+  await page.locator(".historyDisclosure").evaluate((el: HTMLDetailsElement) => { el.open = true; });
     await page.getByLabel("Add images").setInputFiles({ name: "source.png", mimeType: "image/png", buffer: transparentFixturePng() });
     await page.getByRole("button", { name: "Run batch" }).click();
     await expect(page.getByRole("button", { name: "Processing", exact: true })).toBeDisabled();

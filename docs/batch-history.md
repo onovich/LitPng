@@ -3,7 +3,9 @@
 History is off by default. Enabling **Remember future batches in this browser**
 records up to 20 completed batch attempts on the current browser origin. Each
 entry contains a completion timestamp, elapsed time, success/failure counts,
-successful-file byte totals, and the exact settings snapshot used for that run.
+successful-source/output byte totals, and the exact settings snapshot used for
+that run. A source that produces multiple widths is counted once in input bytes;
+all successful variants count toward output bytes and the completion count.
 
 No source filenames, directory paths, error messages, images, previews, or output
 blobs are recorded. User-entered naming templates, prefixes, and suffixes are

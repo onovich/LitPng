@@ -13,3 +13,5 @@ npm-debug.log*
 .tmp-benchmarks/
 .tmp-benchmark-corpus/
 playwright-report/
+apps/web/public/legal/littlepng-source.zip
+apps/web/public/legal/source-sha256.txt

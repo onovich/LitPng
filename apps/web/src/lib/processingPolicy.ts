@@ -1,4 +1,5 @@
 import { createResizeCropPlan } from "./geometry";
+import { settingsForOutput } from "./multiSize";
 import type { ImageJob, ImageSettings, OutputFormat } from "./types";
 
 export type KeepOriginalInput = {
@@ -39,6 +40,8 @@ export function normalizedSettings(settings: ImageSettings): ImageSettings {
     targetSizeKb: 0,
     maxWidth: 0,
     maxHeight: 0,
+    outputWidths: [],
+    cropFrame: undefined,
     cropMode: "fit"
   };
 }
@@ -115,7 +118,7 @@ export function estimateVisualLoss(settings: ImageSettings, jobs: ImageJob[]): L
   const totalSize = measuredJobs.reduce((sum, job) => sum + Math.max(job.sourceSize, 1), 0);
   const weightedLoss = measuredJobs.reduce((sum, job) => {
     const outputType = resolvedOutputType(job.sourceType, normalized.outputFormat);
-    const loss = formatLoss(outputType, normalized.quality) + transformLoss(job, normalized);
+    const loss = formatLoss(outputType, normalized.quality) + transformLoss(job, settingsForOutput(job, normalized));
     return sum + Math.min(100, loss) * Math.max(job.sourceSize, 1);
   }, 0) / totalSize;
 

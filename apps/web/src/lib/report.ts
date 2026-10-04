@@ -4,7 +4,7 @@ const HEADERS = [
   "source_name", "output_name", "source_type", "output_type",
   "source_bytes", "output_bytes", "saved_bytes", "saved_percent",
   "duration_ms", "outcome", "quality_used", "encode_attempts",
-  "target_reached", "error"
+  "target_reached", "error", "requested_max_width", "output_width", "output_height"
 ];
 
 function csvCell(value: string | number | boolean | undefined): string {
@@ -39,7 +39,10 @@ export function compressionReportCsv(jobs: ImageJob[]): string {
       result ? Number(result.qualityUsed.toFixed(3)) : undefined,
       result?.encodeAttempts,
       result?.targetReached,
-      job.error
+      job.error,
+      job.variantWidth,
+      result?.width,
+      result?.height
     ].map(csvCell).join(",");
   });
 
